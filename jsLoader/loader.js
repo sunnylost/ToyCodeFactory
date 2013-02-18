@@ -62,7 +62,7 @@
 	};
 
 	var resolveDependent = function(name, index, byDepend) {
-		var m;
+		var m, d, dm, isOk = true;
 		if(anonymous) {
 			anonymous = false;
 			m = modules[name] = temp;
@@ -70,18 +70,37 @@
 		} else {
 			m = modules[name];
 		}
+		d = m.depend;
+		m.byDepend = byDepend;
+		m.index = index;
+		if(d.length > 0) {
+			for(var i = 0, len = d.length; i < len; i++) {
+				dm = d[i];
+				if(!modules[dm] || !modules[dm].ok) {
+					loadJS(d[i], i, name);
+					isOk = false;
+				}
+			}
+			if(!isOk) return;
+		}
 		m.byDepend = byDepend;
 		m.ok = true;
-		var byModule = modules[byDepend],
+
+		var byModule,
+			depend;
+		while(typeof (byModule = modules[byDepend]) != 'undefined') {
 			depend = byModule.depend;
-		depend[index] = true;
-		byModule.param[index] = m.module.apply(null, m.param);
-		for(var i = 0, len = depend.length; i < len; i++) {
-			if(typeof depend[i] != 'boolean') return;
-		}
-		byModule.ok = true;
-		if(byDepend === '') {
-			callbackFn.apply(null, byModule.param);
+
+			depend[m.index] = true;
+			byModule.param[m.index] = m.module.apply(null, m.param);
+			for(var i = 0, len = depend.length; i < len; i++) {
+				if(typeof depend[i] != 'boolean') return;
+			}
+			byModule.ok = true;
+			(byDepend === '' ? callbackFn : byModule.module).apply(null, byModule.param);
+
+			byDepend = byModule.byDepend;
+			m = byModule;
 		}
 	};
 
