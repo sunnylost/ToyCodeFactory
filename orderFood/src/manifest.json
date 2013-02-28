@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "OrderFood",
+  "description": "美好的上午从订餐开始！",
+  "version": "0.1",
+  "background": {
+    "persistent": false,
+    "scripts": ["main.js"]
+  },
+  "permissions": [
+    "alarms",
+    "notifications",
+    "http://bjdc.taobao.ali.com/"
+  ],
+  "browser_action": {
+    "default_icon": "icon.png"
+  }
+}
