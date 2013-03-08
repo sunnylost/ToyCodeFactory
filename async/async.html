@@ -1,0 +1,68 @@
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Async</title>
+		<meta charset="UTF-8" />
+	</head>
+	<body>
+		<script type="text/javascript" src="http://coolshell.cn/t.js"></script>
+		<script type="text/javascript">
+			var Async = function() {
+				this.index = 0;
+				this.results = [];
+			};
+
+			Async.prototype = {
+				add : function() {
+					this.index++;
+				},
+				//生成callback
+				callback : function(fn) {
+					var that = this;
+					var index = that.index;
+					this.results[index] = {
+						isOK : false,
+						isRun : false,
+						callback : function() {
+							fn.apply(null, arguments);
+						}
+					}
+					return function() {
+						that.run(index, arguments);
+					}
+				},
+
+				run : function(index, arg) {
+					var results = this.results,
+						len = results.length,
+						begin = 0,
+						cur;
+					results[index].isOk = true;
+					results[index].arg = arg;
+					cur = results[begin];
+					while(begin < len && cur.isOk) {
+						if(!cur.isRun) {
+							cur.isRun = true;
+							cur.callback(begin, cur.arg[0]);
+						}
+						cur = results[begin];
+						begin++;
+					}
+				}
+			};
+
+			var a = new Async();
+
+			var total = 20;
+			for(var i = 0; i < total; i++) {
+				a.add(xss_rpc_call2(i, a.callback(function(i, result) {
+					console.log(i + ',' + result);
+				})))
+				/*xss_rpc_call(i, function(result) {
+					console.log(i + ',' + result);
+				})*/
+			}
+		</script>
+	</body>
+</html>	
