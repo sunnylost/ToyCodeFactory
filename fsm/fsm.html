@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>FSM</title>
+    <style type="text/css">
+    </style>
+  </head>
+<body>
+    <button id="hello">hehhe</button>
+    <div id="box"></div>
+
+    <script>
+
+        function FSM(config) {
+            this.config = config;
+            this.currentState = this.config.initState;
+            this.nextState = null;
+            this.states = this.config.states;
+            this.events = this.config.userBehavior;
+            
+            this.defineEvents();
+        }
+
+        FSM.prototype = {
+            on : function(name, fn) {
+                var custom = this.customEvents;
+                if(!this.customEvents) {
+                    custom = this.customEvents = {};
+                }
+                if(!custom[name]) {
+                    custom[name] = [];
+                }
+                custom[name].push(fn);
+            },
+
+            off : function(name, fn) {
+            },
+
+            trigger : function(name, event) {
+                var _this = this,
+                    custom = _this.customEvents;
+                if(!custom) return false;
+
+                var handlers = custom[name];
+                if(!handlers || handlers.length == 0) return false;
+                if(!event) {
+                    event = {};
+                }
+                event.type = name;
+                handlers.forEach(function(fn) {
+                    fn.call(_this, event)
+                })
+            },
+
+            handelEvents : function(event) {
+                var handler = this.states[this.currentState][event.type];
+                if(!handler) return;
+                var nextState = handler.call(null, event);
+                this.currentState = nextState;
+            },
+
+            doTransitions : function() {
+
+            },
+
+            defineEvents : function() {
+                var _this = this,
+                    events = _this.events,
+                    fn;
+
+                for(var i in events) {
+                    (function(name) {
+                        fn = events[name];
+                        fn.call(_this, function(event) {
+                            _this.trigger(name, event);
+                        })
+                        _this.on(name, _this.handelEvents)
+                    })(i)
+                }
+            }
+        };
+
+        // pop up
+        function popUpWidget(config) {
+            this.config = config;
+            this.trigger = config.trigger;
+            this.showed = 'false';
+            this.popUpBox = config.popUpBox;
+
+            var _this = this;
+            var popUpWidgetFSMConf = {
+                initState : 'normal',
+                states : {
+                    'normal' : {
+                        'show' : function(e) {
+                            _this.show(e);
+                            return 'showed';
+                        }
+                    },
+                    'showed' : {
+                        'hide' : function(e) {
+                            _this.hide(e);
+                            return 'normal';
+                        }
+                    }
+                },
+                userBehavior : {
+                    'show' : function(callback) {
+                        document.addEventListener('click', function(e) {
+                            if(e.target === _this.trigger) {
+                                callback({
+                                    data : 'Hello, World!'
+                                });
+                            }
+                            e.stopPropagation();
+                        })
+                    },
+
+                    'hide' : function(callback) {
+                        document.addEventListener('click', function(e) {
+                            if(e.target !== _this.trigger) {
+                                callback();
+                            }
+                        })
+                    }
+                }
+            };
+
+            this.FSM = new FSM(popUpWidgetFSMConf);
+        }
+
+        popUpWidget.prototype = {
+            constructor : popUpWidget,
+            show : function(e) {
+                var elem = this.popUpBox;
+                elem.style.display = 'block';
+                elem.innerHTML = e.data;
+                return 'showed';
+            },
+            hide : function() {
+                this.popUpBox.style.display = 'none';
+                return 'normal';
+            }
+        };
+
+        var $ = function(id) {
+            return document.getElementById(id);
+        }
+ 
+        var config = {
+            'trigger' : $('hello'),
+            'popUpBox' : $('box')
+        };
+
+        var popTest  = new popUpWidget(config);
+
+    </script>
+</body>
+</html>
