@@ -1,0 +1,67 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+
+#container {
+    width: 500px;
+    height: 30px;
+    border: 1px solid green;
+    margin: 100px auto;
+}
+
+.wrapper {
+    height: 100%;
+    cursor: text;
+    font-family: Tahoma;
+}
+
+.input-area {
+    border: 0 none;
+    height: 100%;
+    line-height: 30px;
+    font-size: 20px;
+    width: 100%;
+    outline: none;
+}
+
+.address, .address-edit {
+    display: inline-block;
+    padding: 0 5px;
+    color: #A0A0A0;
+}
+
+.address {
+    cursor: default;
+    margin: 1px 3px;
+}
+
+.address:hover {
+    background: #E6EAF0;
+}
+
+.address b {
+    color: #000;
+    font-weight: normal;
+}
+
+.address-edit {
+    width: 10px;
+}
+
+.address-select {
+    background: #475D76;
+    color: #fff;
+}
+
+.address-select b, .address-select span {
+    color: #fff;
+}
+
+.error {
+    color: red;
+}
+
+.semicolon {
+    color: #A0A0A0;
+}
