@@ -19,6 +19,7 @@
             .wrapper {
                 height: 100%;
                 cursor: text;
+                font-family: Tahoma;
             }
 
             .input-area {
@@ -33,11 +34,21 @@
             .address, .address-edit {
                 display: inline-block;
                 padding: 0 5px;
+                color: #A0A0A0;
+            }
+
+            .address {
+                cursor: default;
+                margin: 1px 3px;
             }
 
             .address:hover {
-                background: #A0A13D;
-                color: #fff;
+                background: #E6EAF0;
+            }
+
+            .address b {
+                color: #000;
+                font-weight: normal;
             }
 
             .address-edit {
@@ -45,7 +56,12 @@
             }
 
             .address-select {
-                background: #475a6d;
+                background: #475D76;
+                color: #fff;
+            }
+
+            .address-select b, .address-select span {
+                color: #fff;
             }
 
             .error {
@@ -143,6 +159,9 @@
                         areaParent.css('width', latest.length * perWidth);
                         //areaIsBlank = $.trim(this.value) ? false : true;
                     })
+                    .on('focus', function() {
+                        addressUtil.unselect();
+                    })
                     .on('blur', function(e) {
                         var val = area.val();
                         if(addressUtil.isValid(val)) {
@@ -167,9 +186,6 @@
                 var codeCommand = {
                     8: function(e) {  //删除
                         addressUtil.delete();
-                        /*
-                            abc@123.com
-                        }*/
                     },
 
                     46: function(e) {  //Delete键
@@ -206,6 +222,19 @@
 
                     isValid: function(address) {
                         return remail.test(address);
+                    },
+
+                    //邮件地址是否已存在
+                    isExist: function(address) {
+                        return this.addresses[address];
+                    },
+
+                    //取消地址的选中状态
+                    unselect: function() {
+                        var select = wrapper.find('.address-select');
+                        if(select.length > 0) {
+                            select.removeClass('address-select');
+                        }
                     },
 
                     create: function(content) {
@@ -255,11 +284,13 @@
                     forward: function() {
                         areaParent.insertBefore(areaParent.prev());
                         area.focus();
+                        addressUtil.unselect();
                     },
 
                     back: function() {
                         areaParent.insertAfter(areaParent.next());
                         area.focus();
+                        addressUtil.unselect();
                     },
 
                     select: function(el) {
@@ -272,11 +303,6 @@
 
                     selectAfter: function() {
                         this.select(areaParent.after());
-                    },
-
-                    //邮件地址是否已存在
-                    isExist: function(address) {
-                        return this.addresses[address];
                     },
 
                     reset: function() {
