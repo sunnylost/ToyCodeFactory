@@ -1,0 +1,12 @@
+.zm-side-pinned-topics,
+#zh-trendings,
+.zu-trending-title,
+#zh-question-webshare-container,
+.zh-question-followers-sidebar
+{
+  display: none !important;
+}
+
+.sunnylost-ref {
+  left: 10px;
+}
