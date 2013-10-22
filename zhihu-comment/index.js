@@ -26,18 +26,24 @@ function addHandler(root) {
         len,
         el,
         ref,
+        id,
         links,
         link,
-        name;
+        name,
+        tmp;
     comments = root.className == 'zm-item-comment' ? (i = comments.length, comments.push(root), comments) : comments.slice.call(root.querySelectorAll('.zm-item-comment'), 0);
     len = comments.length;
 
     for(; i < len; i++) {
         el = comments[i];
-        if(cache[el.dataset['id']]) {
+        id = el.dataset['id'];
+        if(tmp = cache[id]) {
+            if(tmp.className.indexOf('sunnylost-ref') != -1) {
+                el.parentNode.removeChild(el);
+            }
             continue;
         } else {
-            cache[el.dataset['id']] = true;
+            cache[id] = el;
         }
         link = el.getElementsByClassName('zm-item-link-avatar')[0];
         comments[link.title || link.dataset['original_title']] = el;
