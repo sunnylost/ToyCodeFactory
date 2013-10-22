@@ -8,7 +8,8 @@
 // ==/UserScript==
 
 var doc = document,
-    comments = [];
+    comments = [],
+    cache = {};
 
 doc.addEventListener('DOMNodeInserted', checkCommentInsert);
 addHandler( doc );
@@ -30,8 +31,14 @@ function addHandler(root) {
         name;
     comments = root.className == 'zm-item-comment' ? (i = comments.length, comments.push(root), comments) : comments.slice.call(root.querySelectorAll('.zm-item-comment'), 0);
     len = comments.length;
+
     for(; i < len; i++) {
         el = comments[i];
+        if(cache[el.dataset['id']]) {
+            continue;
+        } else {
+            cache[el.dataset['id']] = true;
+        }
         link = el.getElementsByClassName('zm-item-link-avatar')[0];
         comments[link.title || link.dataset['original_title']] = el;
         ref = el.querySelectorAll('.desc');
