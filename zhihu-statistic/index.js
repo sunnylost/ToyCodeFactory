@@ -150,7 +150,8 @@ var html = '<div class="sta-mask"></div>\
         ';
 
 //用逗号分隔用户名
-var users = 'guxizhao,zou-dao-kou,xiaodaoren,cai-tong,xu-xiang-nan,unogzx,shenbin,PeterDeng,namiheike,wu-si-yang-32,yskin,jixin'.split(',');
+//var users = 'guxizhao,zou-dao-kou,xiaodaoren,cai-tong,xu-xiang-nan,unogzx,shenbin,PeterDeng,namiheike,wu-si-yang-32,yskin,jixin'.split(',');
+var users = 'fengchao8829'.split(',');
 //回答数限制
 var answerlimit = 10;
 //赞同数限制
@@ -160,8 +161,7 @@ var ratiolimit = 5;
 //关注者数限制
 var followerlimit = 10;
 
-var body = $(document.body),
-    result = {
+var result = {
         length: 0,
 
         data: {},
@@ -180,27 +180,31 @@ var body = $(document.body),
         }
     },
 
-    rparam = /\$(\d)/g,
+    rparam     = /\$(\d)/g,
+    rtemplate  = /\{\{([^}]+)\}\}/g,
 
-    userIndex = 0,
+    userIndex  = 0,
     userLength = users.length,
     curSortBtn,
-    showtable = true,
+    showtable  = true,
 
     messages = {
-        wait: '共$1个用户，准备扫描第$2个...',
-        loading: '正在加载$1的关注者:$2/$3...',
-        loaded: '$1的$2个关注者加载完成',
-        success: '所有$1名用户的关注者已经全部扫描完成，共找到$2个符合条件的用户',
-        comma: '改为逗号分隔',
-        table: '改为表格显示',
-        quit: '确认退出？'
+        wait    :  '共 $1 个用户，准备扫描第 $2 个...',
+        loading :  '正在加载「$1」的关注者: $2/$3...',
+        loaded  :  '「$1」的 $2 个关注者加载完成',
+        success :  '所有 $1 名用户的关注者已经全部扫描完成，共找到 $2 个符合条件的用户',
+        comma   :  '改为逗号分隔',
+        table   :  '改为表格显示',
+        quit    :  '确认退出？'
     },
 
     strings = {
-        container: '.sta-container',
-        greyClass: 'btn-grey',
-        greenClass: 'btn-dark-green'
+        container  :  '.sta-container',
+        card       :  '.zh-general-list .zm-list-content-medium', //用户信息
+        link       :  '.zg-link',
+        more       :  '.zu-button-more[aria-role]',    //「更多」按钮
+        greyClass  :  'btn-grey',
+        greenClass :  'btn-dark-green'
     };
 
 var statistic = {
@@ -213,22 +217,21 @@ var statistic = {
             table: {
                 prefix: '<table border="1" cellpadding="2"><tr><td>编号</td><td>用户名</td><td>关注者</td><td>提问</td><td>回答</td><td>赞同</td><td>赞同/回答比</td></tr>',
 
-                content:  '<tr><td>$0</td><td><a href="/people/$1/" target="_blank">$2</a></td><td>$3</td><td>$4</td><td>$5</td><td>$6</td><td>$7</td></tr>',
+                content: '<tr><td>{{index}}</td><td><a href="/people/{{id}}/" target="_blank">{{name}}</a></td><td>{{follower}}</td><td>{{ask}}</td><td>{{answer}}</td><td>{{agree}}</td><td>{{ratio}}</td></tr>',
 
                 suffix: '</table>',
             },
             comma: {
                 prefix: '编号,用户名,关注者,提问,回答,赞同,赞同/回答比<ul>',
 
-                content: '<li><span>$0</span>,<a href="/people/$1/" target="_blank">$2</a>,<span>$3</span>,<span>$4</span>,<span>$5</span>,<span>$6</span>,<span>$7</span></li>',
+                content: '<li><span>{{index}},</span><a href="/people/{{id}}/" target="_blank">{{name}},</a><span>{{follower}},</span><span>${{ask}},</span><span>{{answer}},</span><span>{{agree}}</span>,<span>{{ratio}}</span></li>',
 
                 suffix: '</ul>'
             }
         },
 
         compile: function(datas, type) {
-            var tmp,
-                r = [],
+            var r = [],
                 i = 0,
                 len = datas.length,
                 view = this.templates[type],
@@ -237,9 +240,9 @@ var statistic = {
 
             for (; i < len; i++) {
                 item = datas[i];
-                tmp = [ i + 1, item.id, item.name, item.follower, item.ask, item.answer, item.agree, item.ratio ];
-                r.push(contentTmpl.replace(rparam, function(a, b) {
-                    return tmp[b];
+                item.index = i + 1;
+                r.push(contentTmpl.replace(rtemplate, function(a, b) {
+                    return item[b];
                 }));
             }
             return view.prefix + r.join('') + view.suffix;
@@ -251,8 +254,8 @@ var statistic = {
     },
 
     init: function() {
-        body.append($('<style>').html(style))
-            .append(html);
+        $(document.body).append($('<style>').html(style))
+                        .append(html);
         this.el = $(strings.container);
         this.initEvent();
         this.loadUser();
@@ -292,8 +295,12 @@ var statistic = {
         }
     },
 
+    /*
+        加载更多关注的用户。
+        手动触发 「更多」 按钮上的 click 事件
+    */
     loadMore: function(c, name, total) {
-        var btn = c.find('.zu-button-more[aria-role]'),
+        var btn = c.find(strings.more),
             num,
             that = this;
 
@@ -314,30 +321,35 @@ var statistic = {
 
     showRatio: function(c) {
         var el, link, id, name, details, follower, ask, answer, agree, ratio;
-        var cards = c.find('.zh-general-list .zm-list-content-medium'),
+        var cards = c.find(strings.card),
             len = cards.length;
         while(len--) {
-            el = $(cards[len]);
-            link = el.find('.zg-link');
-            id = link.attr('href');
+            el   = $(cards[len]);
+            link = el.find(strings.link);
+            id   = link.attr('href');
+
             if(result.has(id)) continue;
 
             name = link.html();
-            details = el.find('.details a');
+            details  = el.find('.details a');
             follower = parseInt(details[0].innerHTML, 10);
-            ask = parseInt(details[1].innerHTML, 10);
-            answer = parseInt(details[2].innerHTML, 10);
-            agree = parseInt(details[3].innerHTML, 10);
+            ask      = parseInt(details[1].innerHTML, 10);
+            answer   = parseInt(details[2].innerHTML, 10);
+            agree    = parseInt(details[3].innerHTML, 10);
 
-            if (answer >= answerlimit && agree >= agreelimit && (ratio = agree / answer) >= ratiolimit && follower > followerlimit) {
+            if ( answer   >= answerlimit &&
+                 agree    >= agreelimit &&
+                 (ratio   =  agree / answer) >= ratiolimit &&
+                 follower >  followerlimit ) {
+
                 result.push({
-                    name : name,
-                    id : id,
+                    name     : name,
+                    id       : id,
                     follower : follower,
-                    ask : ask,
-                    agree : agree,
-                    answer : answer,
-                    ratio : ratio.toFixed(2)
+                    ask      : ask,
+                    agree    : agree,
+                    answer   : answer,
+                    ratio    : ratio.toFixed(2)
                 })
             }
         }
@@ -355,13 +367,16 @@ var statistic = {
     */
     sortResult: function(el) {
         var type;
+
         if(result.isEmpty()) return;
+
         if(curSortBtn) {
             if(curSortBtn[0] == el[0]) return;
             curSortBtn.removeClass(strings.greyClass).addClass(strings.greenClass);
         }
         curSortBtn = el;
         curSortBtn.removeClass(strings.greenClass).addClass(strings.greyClass);
+
         type = curSortBtn.data('type');
         result = ([]).sort.call(result, function(a, b) {
             return b[type] - a[type];
@@ -403,15 +418,15 @@ var statistic = {
 };
 
 statistic.ATTR = {
-    message: '.sta-msg',
+    message : '.sta-msg',
 
-    icon: 'img',
+    icon    : 'img',
 
-    result: '.sta-result',
+    result  : '.sta-result',
 
-    viewBtn: '.sta-change-btn',
+    viewBtn : '.sta-change-btn',
 
-    iframe: '#tempframe'
+    iframe  : '#tempframe'
 };
 
 statistic.EVENT = {
