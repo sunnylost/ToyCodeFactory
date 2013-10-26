@@ -308,7 +308,6 @@ var statistic = {
 
     /*
         加载更多关注的用户。
-
     */
     loadMore: function( iframe ) {
         var num = 0,
@@ -333,13 +332,12 @@ var statistic = {
                 },
                 success: function(resp) {
                     var msg = resp.msg;
-                    that._container.append(resp.msg.join('').replace(ravatar, ''));
+                    that._container.append(msg.join('').replace(ravatar, ''));
 
                     num += msg.length;
 
                     that.showMessage('loading', name, num, total);
                     if(msg.length < 20) {
-                        that.showMessage('loaded', name, total);
                         that.showRatio(that._container);
                     } else {
                         setTimeout(function() {
