@@ -210,8 +210,6 @@ var result = {
 var statistic = {
     cache: {},
 
-
-
     limits: {
         answer   : 10,   //回答数限制
         agree    : 200,  //赞同数限制
@@ -233,7 +231,7 @@ var statistic = {
             comma: {
                 prefix: '编号,用户名,关注者,提问,回答,赞同,赞同/回答比<ul>',
 
-                content: '<li><span>{{index}},</span><a href="/people/{{id}}/" target="_blank">{{name}},</a><span>{{follower}},</span><span>${{ask}},</span><span>{{answer}},</span><span>{{agree}}</span>,<span>{{ratio}}</span></li>',
+                content: '<li><span>{{index}},</span><a href="/people/{{id}}/" target="_blank">{{name}},</a><span>{{follower}},</span><span>{{ask}},</span><span>{{answer}},</span><span>{{agree}},</span><span>{{ratio}}</span></li>',
 
                 suffix: '</ul>'
             }
@@ -322,7 +320,7 @@ var statistic = {
             hashEl = jq(strings.hash),
 
             params = {
-                hash_id: hashEl.length ? hashEl.attr('id').substring(3) : iframe[0].contentWindow._zao.uid,
+                hash_id: hashEl.length ? hashEl.attr('id').substring(3) : iframe[0].contentWindow._zao.uid,  //当打开自己的页面时没有关注按钮，因此需要获取 _zao 全局对象
                 order_by: 'created',
                 offset: 0
             },
@@ -407,10 +405,12 @@ var statistic = {
 
         if(curSortBtn) {
             if(curSortBtn[0] == el[0]) return;
-            curSortBtn.removeClass(strings.greyClass).addClass(strings.greenClass);
+            curSortBtn.removeClass(strings.greyClass)
+                      .addClass(strings.greenClass);
         }
         curSortBtn = el;
-        curSortBtn.removeClass(strings.greenClass).addClass(strings.greyClass);
+        curSortBtn.removeClass(strings.greenClass)
+                  .addClass(strings.greyClass);
 
         type = curSortBtn.data('type');
         result = ([]).sort.call(result, function(a, b) {
@@ -420,20 +420,17 @@ var statistic = {
     },
 
     showMessage: function(state) {
-        var msg = messages[state],
-            args = ([]).slice.call(arguments);
+        var args = ([]).slice.call(arguments);
 
-        msg = msg.replace(rparam, function(m, a) {
+        this.get('message').html(messages[state].replace(rparam, function(m, a) {
             return args[a];
-        })
-
-        this.get('message').html(msg);
+        }));
         return this;
     },
 
     success: function () {
-        this.showMessage('success', userIndex, result.length);
-        this.hideIcon();
+        this.showMessage('success', userIndex, result.length)
+            .hideIcon();
     },
 
     close: function() {
