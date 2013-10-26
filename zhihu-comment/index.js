@@ -11,6 +11,8 @@ var doc = document,
     comments = [],
     cache = {};
 
+GM_addStyle('.sunnylost-ref { left: 10px; }');
+
 doc.addEventListener('DOMNodeInserted', checkCommentInsert);
 addHandler( doc );
 
