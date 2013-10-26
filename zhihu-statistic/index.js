@@ -1,5 +1,7 @@
 /*
-    相关链接：http://zhuanlan.zhihu.com/sulian/19601168
+    @relatedLink: http://zhuanlan.zhihu.com/sulian/19601168
+    @author:      @苏莉安
+    @modified:    @Sunnylost
 */
 
 var style = '\
@@ -71,6 +73,8 @@ var style = '\
         text-align: left;\
         padding: 5px 5px 5px 10px;\
         background-image: -webkit-linear-gradient(top,#086ED5,#055DB5);\
+        border-top-left-radius: 10px;\
+        border-top-right-radius: 10px;\
         color: #fff;\
         overflow: hidden;\
     }\
@@ -150,16 +154,7 @@ var html = '<div class="sta-mask"></div>\
         ';
 
 //用逗号分隔用户名
-//var users = 'guxizhao,zou-dao-kou,xiaodaoren,cai-tong,xu-xiang-nan,unogzx,shenbin,PeterDeng,namiheike,wu-si-yang-32,yskin,jixin'.split(',');
-var users = 'fengchao8829'.split(',');
-//回答数限制
-var answerlimit = 10;
-//赞同数限制
-var agreelimit = 200;
-//赞同回答比数限制
-var ratiolimit = 5;
-//关注者数限制
-var followerlimit = 10;
+var users = 'guxizhao,zou-dao-kou,xiaodaoren,cai-tong,xu-xiang-nan,unogzx,shenbin,PeterDeng,namiheike,wu-si-yang-32,yskin,jixin'.split(',');
 
 var result = {
         length: 0,
@@ -209,6 +204,13 @@ var result = {
 
 var statistic = {
     cache: {},
+
+    limits: {
+        answer   : 10,   //回答数限制
+        agree    : 200,  //赞同数限制
+        ratio    : 5,    //赞同回答比数限制
+        follower : 10    //关注者数限制
+    },
 
     viewType: 'table',
 
@@ -274,7 +276,7 @@ var statistic = {
     /*
         切换视图
     */
-    changeView: function(btn) {
+    changeView: function( btn ) {
         if(result.isEmpty()) return;
         this.viewType = this.viewType == 'table' ? 'comma' : 'table';
         btn.html(messages[this.viewType]);
@@ -299,7 +301,7 @@ var statistic = {
         加载更多关注的用户。
         手动触发 「更多」 按钮上的 click 事件
     */
-    loadMore: function(c, name, total) {
+    loadMore: function( c, name, total ) {
         var btn = c.find(strings.more),
             num,
             that = this;
@@ -319,10 +321,19 @@ var statistic = {
         }
     },
 
-    showRatio: function(c) {
+    isUserValid: function( card ) {
+        var limits = this.limits;
+        return  card.answer   >= limits.answer &&
+                card.agree    >= limits.agree  &&
+               (card.ratio    =  (card.agree / card.answer).toFixed(2)) >= limits.ratio &&
+                card.follower >  limits.follower;
+    },
+
+    showRatio: function( c ) {
         var el, link, id, name, details, follower, ask, answer, agree, ratio;
         var cards = c.find(strings.card),
-            len = cards.length;
+            len = cards.length,
+            card;
         while(len--) {
             el   = $(cards[len]);
             link = el.find(strings.link);
@@ -330,28 +341,17 @@ var statistic = {
 
             if(result.has(id)) continue;
 
-            name = link.html();
-            details  = el.find('.details a');
-            follower = parseInt(details[0].innerHTML, 10);
-            ask      = parseInt(details[1].innerHTML, 10);
-            answer   = parseInt(details[2].innerHTML, 10);
-            agree    = parseInt(details[3].innerHTML, 10);
+            details = el.find('.details a');
 
-            if ( answer   >= answerlimit &&
-                 agree    >= agreelimit &&
-                 (ratio   =  agree / answer) >= ratiolimit &&
-                 follower >  followerlimit ) {
+            card          = {};
+            card.id       = id;
+            card.name     = link.html();
+            card.follower = parseInt(details[0].innerHTML, 10);
+            card.ask      = parseInt(details[1].innerHTML, 10);
+            card.answer   = parseInt(details[2].innerHTML, 10);
+            card.agree    = parseInt(details[3].innerHTML, 10);
 
-                result.push({
-                    name     : name,
-                    id       : id,
-                    follower : follower,
-                    ask      : ask,
-                    agree    : agree,
-                    answer   : answer,
-                    ratio    : ratio.toFixed(2)
-                })
-            }
+            this.isUserValid(card) && result.push(card);
         }
         this.showResult()
             .loadUser();
