@@ -177,6 +177,7 @@ var result = {
 
     rparam     = /\$(\d)/g,
     rtemplate  = /\{\{([^}]+)\}\}/g,
+    ravatar    = /\<img src="[^"]+"[^>]+\>/g, //过滤用户头像，防止无用下载
 
     userIndex  = 0,
     userLength = users.length,
@@ -194,16 +195,22 @@ var result = {
     },
 
     strings = {
+        api        :  '/node/ProfileFolloweesListV2',        //获得用户关注用户的接口
         container  :  '.sta-container',
-        card       :  '.zh-general-list .zm-list-content-medium', //用户信息
+        card       :  '.zm-list-content-medium',             //用户信息
+        hash       :  '.zm-profile-header-op-btns a',        // 获取 hash_id 的元素
         link       :  '.zg-link',
-        more       :  '.zu-button-more[aria-role]',    //「更多」按钮
+        username   :  '.title-section.ellipsis a',
+        total      :  '.zm-profile-side-following strong',  //用户关注人数
+        more       :  '.zu-button-more[aria-role]',         //「更多」按钮
         greyClass  :  'btn-grey',
         greenClass :  'btn-dark-green'
     };
 
 var statistic = {
     cache: {},
+
+
 
     limits: {
         answer   : 10,   //回答数限制
@@ -256,9 +263,12 @@ var statistic = {
     },
 
     init: function() {
-        $(document.body).append($('<style>').html(style))
+        var doc = document;
+        $(doc.body).append($('<style>').html(style))
                         .append(html);
         this.el = $(strings.container);
+        this._container = $('<div>');
+
         this.initEvent();
         this.loadUser();
     },
@@ -290,7 +300,8 @@ var statistic = {
         if(users.length && (user = users.shift())) {
             this.showMessage('wait', userLength, ++userIndex)
                 .get('iframe').attr('src', '/people/' + user + '/followees').load(function() {
-                that.loadMore($(this).contents());
+                that._container.html('');
+                that.loadMore($(this));
             })
         } else {
             this.success();
@@ -299,26 +310,50 @@ var statistic = {
 
     /*
         加载更多关注的用户。
-        手动触发 「更多」 按钮上的 click 事件
-    */
-    loadMore: function( c, name, total ) {
-        var btn = c.find(strings.more),
-            num,
-            that = this;
 
-        name = name || c.find('.title-section.ellipsis a').html();
-        if(btn.length) {
-            btn.get(0).click();
-            num = c.find('.zh-general-list .zm-profile-card .zm-list-content-medium').length;
-            total = total || c.find('.zm-profile-side-following strong').html();
-            that.showMessage('loading', name, num, total);
-            setTimeout(function() {
-                that.loadMore(c, name, total);
-            }, 2000)
-        } else {
-            that.showMessage('loaded', name, total);
-            that.showRatio(c);
-        }
+    */
+    loadMore: function( iframe ) {
+        var num = 0,
+            contents = iframe.contents(),
+            name = contents.find(strings.username).html();
+            total = contents.find(strings.total).html();
+            jq = iframe[0].contentWindow.$,
+            that = this,
+            hashEl = jq(strings.hash),
+
+            params = {
+                hash_id: hashEl.length ? hashEl.attr('id').substring(3) : iframe[0].contentWindow._zao.uid,
+                order_by: 'created',
+                offset: 0
+            },
+            config = {
+                type: 'post',
+                url: strings.api,
+                data: {
+                    method: 'next',
+                    params: params
+                },
+                success: function(resp) {
+                    var msg = resp.msg;
+                    that._container.append(resp.msg.join('').replace(ravatar, ''));
+
+                    num += msg.length;
+
+                    that.showMessage('loading', name, num, total);
+                    if(msg.length < 20) {
+                        that.showMessage('loaded', name, total);
+                        that.showRatio(that._container);
+                    } else {
+                        setTimeout(function() {
+                            params.offset += 20;
+                            config.data.params = params;
+                            jq.ajax(config);
+                        }, 500)
+                    }
+                }
+            };
+
+        jq.ajax(config);
     },
 
     isUserValid: function( card ) {
