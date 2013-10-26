@@ -206,6 +206,46 @@ var body = $(document.body),
 var statistic = {
     cache: {},
 
+    viewType: 'table',
+
+    view: {
+        templates: {
+            table: {
+                prefix: '<table border="1" cellpadding="2"><tr><td>编号</td><td>用户名</td><td>关注者</td><td>提问</td><td>回答</td><td>赞同</td><td>赞同/回答比</td></tr>',
+
+                content:  '<tr><td>$0</td><td><a href="/people/$1/" target="_blank">$2</a></td><td>$3</td><td>$4</td><td>$5</td><td>$6</td><td>$7</td></tr>',
+
+                suffix: '</table>',
+            },
+            comma: {
+                prefix: '编号,用户名,关注者,提问,回答,赞同,赞同/回答比<ul>',
+
+                content: '<li><span>$0</span>,<a href="/people/$1/" target="_blank">$2</a>,<span>$3</span>,<span>$4</span>,<span>$5</span>,<span>$6</span>,<span>$7</span></li>',
+
+                suffix: '</ul>'
+            }
+        },
+
+        compile: function(datas, type) {
+            var tmp,
+                r = [],
+                i = 0,
+                len = datas.length,
+                view = this.templates[type],
+                contentTmpl = view.content,
+                item;
+
+            for (; i < len; i++) {
+                item = datas[i];
+                tmp = [ i + 1, item.id, item.name, item.follower, item.ask, item.answer, item.agree, item.ratio ];
+                r.push(contentTmpl.replace(rparam, function(a, b) {
+                    return tmp[b];
+                }));
+            }
+            return view.prefix + r.join('') + view.suffix;
+        }
+    },
+
     get: function(s) {
         return this.cache[s] || (this.cache[s] = this.el.find(this.ATTR[s]));
     },
@@ -233,8 +273,8 @@ var statistic = {
     */
     changeView: function(btn) {
         if(result.isEmpty()) return;
-        showtable = !showtable;
-        btn.html(messages[showtable ? 'table' : 'comma']);
+        this.viewType = this.viewType == 'table' ? 'comma' : 'table';
+        btn.html(messages[this.viewType]);
         this.showResult();
     },
 
@@ -306,23 +346,7 @@ var statistic = {
     },
 
     showResult: function () {
-        var r = this.get('result'),
-            tmp;
-
-        if (showtable) {
-            tmp = [ '<table border="1" cellpadding="2"><tr><td>编号</td><td>用户名</td><td>关注者</td><td>提问</td><td>回答</td><td>赞同</td><td>赞同/回答比</td></tr>' ];
-            for (var i = 0, len = result.length; i < len; i++) {
-                tmp.push("<tr><td>" + (parseInt(i) + 1) + "</td><td><a href='/people/" + result[i].id + "/' target='_blank'>" + result[i].name + "</a></td><td>" + result[i].follower + "</td><td>" + result[i].ask + "</td><td>" + result[i].answer + "</td><td>" + result[i].agree + "</td><td>" + result[i].ratio + "</td></tr>");
-            }
-            tmp.push('</table>');
-        } else {
-            tmp = [ '编号,用户名,关注者,提问,回答,赞同,赞同/回答比<ul>' ];
-            for (var i = 0, len = result.length; i < len; i++) {
-                tmp.push('<li><span>' + (parseInt(i) + 1) + "</span>,<a href='/people/" + result[i].id + "/' target='_blank'>" + result[i].name + "</a>,<span>" + result[i].follower + "</span>,<span>" + result[i].ask + "</span>,<span>" + result[i].answer + "</span>,<span>" + result[i].agree + "</span>,<span>" + result[i].ratio + '</span></li>');
-            }
-            tmp.push('</ul>');
-        }
-        r.html(tmp.join(''));
+        this.get('result').html(this.view.compile(result, this.viewType));
         return this;
     },
 
