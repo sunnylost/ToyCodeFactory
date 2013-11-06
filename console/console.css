@@ -1,0 +1,54 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.console-wrap {
+    font: 12px MicrosoftYaHei, sans-serif;
+    position: absolute;
+    width: 100%;
+}
+
+.console-input {
+    font-size: 1.5em;
+    width: 99%;
+    height: 2em;
+    line-height: 2em;
+    padding: 5px 0 5px 1%;
+    overflow: hidden;
+    background: #E6E8F2;
+    box-shadow: rgba(0, 0, 0, 0.298039) 0px 2px 10px;
+}
+
+.console-input:focus {
+    outline: none;
+}
+
+/* result list */
+.console-result {
+    list-style: none;
+    overflow: hidden;
+}
+
+/* Tool bar */
+.console-toolbar {
+    list-style: none;
+    overflow: hidden;
+    height: 3em;
+    font-size: 1.4em;
+    padding-top: 5px;
+}
+
+.console-toolbar li {
+    float: left;
+    padding: 5px 10px;
+    margin-left: 5px;
+}
+
+.console-toolbar li:hover,
+.console-toolbar .active {
+    background: #ccc;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+}
