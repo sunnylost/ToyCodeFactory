@@ -7,18 +7,22 @@
     </head>
     <body>
         <div class="console-wrap">
-            <div class="console-input" contenteditable></div>
+            <div class="console-inputwrap">
+                <span class="console-input" contenteditable></span>
+                <span class="console-hint"></span>
+            </div>
             <ul class="console-result"></ul>
             <ul class="console-toolbar">
-                <li data-type="all" class="active">All</li>
-                <li data-type="errors">Errors</li>
-                <li data-type="warnings">Warnings</li>
-                <li data-type="logs">Logs</li>
-                <li data-type="debugs">Debugs</li>
-                <li data-type="debugs">Clear</li>
+                <li class="active"><a href="#all">All</a></li>
+                <li><a href="#errors">Errors</a></li>
+                <li><a href="#warnings">Warnings</a></li>
+                <li><a href="#logs">Logs</a></li>
+                <li><a href="#debugs">Debugs</a></li>
+                <li><a href="#clear">Clear</a></li>
             </ul>
         </div>
 
+        <script type="text/javascript" src="monster.js"></script>
         <script type="text/javascript" src="console.js"></script>
     </body>
 </html>
