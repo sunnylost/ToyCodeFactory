@@ -56,6 +56,10 @@
                             content = el.innerHTML;
                         var m = this.model;
                         el.innerHTML = '';
+                        this.trigger('render', {
+                            type   : 'log',
+                            content: content
+                        })
                     }
                 }
             }
@@ -88,11 +92,21 @@
     };
 
     Console.view = {
+        init: function() {
+            console.log(this)
+            this.on('render', this.render, this);
+        },
+
         templates: {
             item: '<li class="console-{{type}}"><i class="console-gutter"></i><div class="console-content">{{content}}</div></li>'
         },
 
-        el: '.console-result'
+        el: '.console-result',
+
+        render: function(data) {
+            var result = this.compile('item', data);
+            this.get(this.el)[0].innerHTML += result;
+        }
     };
 
     Monster.bootstrap(Console);
