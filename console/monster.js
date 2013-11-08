@@ -15,18 +15,49 @@
         return cache[name] || (cache[name] = _(attrs && attrs[name] || name, context));
     };
 
+    var Event = {
+        _handlers: {},
+
+        on: function(name, handler, context) {
+            var handlers = this._handlers;
+            (handlers[name] || (handlers[name] = [])).push(handler.bind(context));
+        },
+
+        off: function(name, handler) {
+            var handlers = this._handlers[name];
+            if(handler) {
+                for(var i = 0, len = handlers.length; i < len; i++) {
+                    if(handlers[i] === handler) {
+                        handlers.splice(i, 1);
+                        len--;
+                    }
+                }
+            } else {
+                this[name] = [];
+            }
+        },
+
+        trigger: function(name, data) {
+            var handlers = this._handlers[name] || [];
+            for(var i = 0, len = handlers.length; i < len; i++) {
+                handlers[i].call(this, data);
+            }
+        }
+    };
+
     var rhash      = /#(.+)$/,
-        rkeyevents = /keypress|keydown|keyup/;
+        rkeyevents = /keypress|keydown|keyup/,
+        rattrs     = /{{([^}]+)}}/g;
 
     /* fakeMVC */
     function Monster(obj) {
-        return new Monster.prototype.init(obj);
+        return new Monster.prototype.initialize(obj);
     }
 
     Monster.prototype = {
         constructor: Monster,
 
-        init: function(obj) {
+        initialize: function(obj) {
             var that    = this;
             this._obj   = obj;
             this.routes = {};
@@ -56,8 +87,6 @@
                     }
                 }
             }
-            console.log(events);
-
             typeof obj.init == 'function' && obj.init.call(this);
         },
 
@@ -69,18 +98,32 @@
     };
 
     Monster.bootstrap = function(obj) {
-        var m   = Monster(obj);
+        var m    = Monster(obj),
+            h    = {},
+            that = this;
+
         m.view  = new View(obj.view);
         m.model = new Model(obj.model);
         m.route = new Route(obj.route);
-        m.route.cache = m.model.cache = m.view.cache = m.cache;
+        [ m, m.view, m.model, m.route ].forEach(function(v) {
+            v.cache     = m.cache;
+            v.on        = Event.on;
+            v.off       = Event.off;
+            v.trigger   = Event.trigger;
+            v._handlers = h;
+            v.init && v.init.call(v);
+        })
+
         return m;
     };
 
-    Monster.prototype.init.prototype = Monster.prototype;
+    Monster.prototype.initialize.prototype = Monster.prototype;
 
     var Model = function(obj) {
-        return this._obj = obj;
+        for(var key in obj) {
+            this[key] = obj[key];
+        }
+        this._obj = obj;
     };
 
     Model.prototype = {
@@ -90,8 +133,10 @@
     };
 
     var View = function(obj) {
+        for(var key in obj) {
+            this[key] = obj[key];
+        }
         this._obj = obj;
-        this.el   = obj.el;
     };
 
     View.prototype = {
@@ -100,12 +145,19 @@
         get: _.get,
 
         clear: function() {
-            var el = this.get(this.el);
+            var el = this.get(this.el)[0];
             el.innerHTML = '';
         },
 
         render: function(obj) {
-            var model = this.model;
+        },
+
+        compile: function(key, datas) {
+            var tmpl = this.templates[key];
+            return tmpl ? tmpl.replace(rattrs, function(_, attr) {
+                var r = datas[attr]
+                return typeof r == 'undefined' ? '' : r;
+            }) : '';
         }
     };
 
@@ -127,5 +179,6 @@
         }
     };
 
+    Monster.Event = Event;
     win.Monster = Monster;
 }(window, document))
