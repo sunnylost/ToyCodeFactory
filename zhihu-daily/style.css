@@ -28,6 +28,16 @@ body {
     overflow: hidden;
 }
 
+.setting {
+    position: fixed;
+    top: 22px;
+    right: 30px;
+    width: 36px;
+    height: 30px;
+    background: url(imgs/setting.png);
+    z-index: 100;
+}
+
 .slides {
     position: absolute;
     bottom: 20px;
@@ -126,7 +136,7 @@ body {
     color: #6a6a6a;
 }
 
-.theme-dark .entry {
+.theme-light .entry {
     border-bottom: 3px solid #f6f6f6;
 }
 
