@@ -54,7 +54,7 @@ var style = '\
         position: fixed;\
         top: 10%;\
         left: 30%;\
-        width: 40%;\
+        width: 50%;\
         height: 500px;\
         z-index: 1000;\
         border-radius: 10px;\
@@ -224,14 +224,14 @@ var statistic = {
             table: {
                 prefix: '<table border="1" cellpadding="2"><tr><td>编号</td><td>用户名</td><td>关注者</td><td>提问</td><td>回答</td><td>赞同</td><td>赞同/回答比</td></tr>',
 
-                content: '<tr><td>{{index}}</td><td><a href="/people/{{id}}/" target="_blank">{{name}}</a></td><td>{{follower}}</td><td>{{ask}}</td><td>{{answer}}</td><td>{{agree}}</td><td>{{ratio}}</td></tr>',
+                content: '<tr><td>{{index}}</td><td><a href="{{id}}/" target="_blank">{{name}}</a></td><td>{{follower}}</td><td>{{ask}}</td><td>{{answer}}</td><td>{{agree}}</td><td>{{ratio}}</td></tr>',
 
                 suffix: '</table>',
             },
             comma: {
                 prefix: '编号,用户名,关注者,提问,回答,赞同,赞同/回答比<ul>',
 
-                content: '<li><span>{{index}},</span><a href="/people/{{id}}/" target="_blank">{{name}},</a><span>{{follower}},</span><span>{{ask}},</span><span>{{answer}},</span><span>{{agree}},</span><span>{{ratio}}</span></li>',
+                content: '<li><span>{{index}},</span><a href="{{id}}/" target="_blank">{{name}},</a><span>{{follower}},</span><span>{{ask}},</span><span>{{answer}},</span><span>{{agree}},</span><span>{{ratio}}</span></li>',
 
                 suffix: '</ul>'
             }
