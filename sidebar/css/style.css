@@ -1,0 +1,101 @@
+/*------------------------------------*\
+    CSS RESET
+\*------------------------------------*/
+* {
+  margin: 0;
+  padding: 0;
+}
+/*------------------------------------*\
+    SIDEBAR
+\*------------------------------------*/
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  width: 315px;
+  color: #fff;
+  /*------------------------------------*\
+      toolbar 面板
+  \*------------------------------------*/
+  /*------------------------------------*\
+      通用提示框
+  \*------------------------------------*/
+  /*------------------------------------*\
+      关闭按钮
+  \*------------------------------------*/
+  /*------------------------------------*\
+      用户头像
+  \*------------------------------------*/
+  /*------------------------------------*\
+     回到顶部按钮
+  \*------------------------------------*/
+}
+.sidebar .toolbar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 35px;
+  height: 100%;
+  background-color: #000;
+}
+.sidebar .section {
+  position: absolute;
+  width: 100%;
+}
+.sidebar .hint {
+  position: absolute;
+  top: 0;
+  display: none;
+  padding: 10px;
+  background-color: #737373;
+  white-space: nowrap;
+  opacity: 0;
+}
+.sidebar .arrow-r {
+  position: absolute;
+  top: 12px;
+  right: -14px;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  border-width: 7px;
+  border-style: solid;
+  border-color: transparent transparent transparent #737373;
+}
+.sidebar .sec-close {
+  top: 11px;
+}
+.sidebar .btn-close {
+  width: 14px;
+  height: 14px;
+  margin: auto;
+  background: url("../assets/close.png");
+}
+.sidebar .sec-avatar {
+  top: 20%;
+}
+.sidebar .avatar {
+  width: 35px;
+  height: 35px;
+  margin: auto;
+  line-height: 35px;
+  text-align: center;
+  cursor: pointer;
+}
+.sidebar .avatar:hover {
+  background: url("../assets/avatar-bg.png");
+}
+.sidebar .avatar img {
+  vertical-align: middle;
+}
+.sidebar .sec-go-top {
+  bottom: 5px;
+}
+.sidebar .btn-go-top {
+  display: block;
+  width: 35px;
+  height: 35px;
+  background-image: url("../assets/top.jpg");
+}
