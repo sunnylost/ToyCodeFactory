@@ -7,17 +7,12 @@
     </head>
     <body>
         <div id="sidebar" class="sidebar">
-
             <div class="toolbar js-toolbar">
                 <div class="section sec-close">
-                    <div class="btn btn-close" data-plugin="close"></div>
-                    <div class="js-hint hint">
-                        <div class="js-hint-content hint-content"></div>
-                        <i class="arrow-r"></i>
-                    </div>
+                    <a href="#" class="btn btn-close" data-plugin="close"></a>
                 </div>
-                <div class="section sec-avatar">
-                    <div class="avatar" data-plugin="avatar">
+                <div class="section sec-user">
+                    <div class="avatar" data-plugin="user">
                         <img src="assets/avatar.jpg" width="26" height="26">
                     </div>
                     <div class="js-hint hint">
@@ -35,11 +30,13 @@
                     </div>
                 </div>
             </div>
-            <div class="main"></div>
+            <div class="main js-main"></div>
         </div>
 
         <script src="js/jquery-1.11.1.js"></script>
         <script src="js/index.js"></script>
+        <script src="js/close.js"></script>
         <script src="js/top.js"></script>
+        <script src="js/user.js"></script>
     </body>
 </html>

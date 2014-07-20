@@ -11,7 +11,7 @@
 .sidebar {
   position: fixed;
   top: 0;
-  right: 0;
+  right: -280px;
   bottom: 0;
   z-index: 100;
   width: 315px;
@@ -26,7 +26,7 @@
       关闭按钮
   \*------------------------------------*/
   /*------------------------------------*\
-      用户头像
+      用户信息
   \*------------------------------------*/
   /*------------------------------------*\
      回到顶部按钮
@@ -68,12 +68,16 @@
   top: 11px;
 }
 .sidebar .btn-close {
-  width: 14px;
-  height: 14px;
+  display: none;
+  width: 28px;
+  height: 28px;
   margin: auto;
-  background: url("../assets/close.png");
+  background: url("../assets/close.png") center center no-repeat;
 }
-.sidebar .sec-avatar {
+.sidebar.opened .btn-close {
+  display: block;
+}
+.sidebar .sec-user {
   top: 20%;
 }
 .sidebar .avatar {

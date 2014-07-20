@@ -11,6 +11,8 @@
     var goTop = Sidebar.loadPlugin({
         id: 'go-top',
 
+        isNeedMainArea: false,
+
         init: function() {
             this.hintContent = '返回顶部';
         },

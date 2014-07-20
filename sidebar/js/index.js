@@ -8,7 +8,9 @@
 !function(global) {
     var doc = global.document;
 
-    var DATA_PLUGIN = '[data-plugin]';
+    var DATA_PLUGIN  = '[data-plugin]';
+    var STATE_OPENED = 'opened';
+    var STATE_CLOSED = 'closed';
 
     function Sidebar() {
         this.init();
@@ -21,6 +23,10 @@
             var els = this.els = {};
             var root = els.root = $('#sidebar');
             els.toolbar = root.find('.js-toolbar');
+            els.main    = root.find('js-main');
+
+            this.events   = new Events();
+            this.viewState = STATE_CLOSED;
 
             this.initEvent();
             this.plugins = {
@@ -35,6 +41,30 @@
                 root = els.root,
                 toolbar = els.toolbar;
 
+            $(doc).on('click', function() {
+                that.events.trigger('sidebar.close');
+            });
+
+            this.events.on('sidebar.open', function() {
+                if(this.viewState == STATE_CLOSED) {
+                    this.els.root.animate({
+                            'right': 0
+                        }, 500)
+                        .addClass(STATE_OPENED)
+                        .removeClass(STATE_CLOSED);
+                    this.viewState = STATE_OPENED;
+                }
+            }, this).on('sidebar.close', function() {
+                if(this.viewState == STATE_OPENED) {
+                    this.els.root.animate({
+                            'right': '-280px'
+                        }, 500)
+                        .addClass(STATE_CLOSED)
+                        .removeClass(STATE_OPENED);;
+                    this.viewState = STATE_CLOSED;
+                }
+            }, this);
+
             /* 注册与 hint 有关的事件 */
             toolbar.on('mouseenter', DATA_PLUGIN, function() {
                 var plugin = that.plugins.ids[$(this).data('plugin')];
@@ -42,15 +72,21 @@
             }).on('mouseleave', DATA_PLUGIN, function(e) {
                 var plugin = that.plugins.ids[$(this).data('plugin')];
                 plugin && plugin.hint && plugin.hint.hide();
-            }).on('click', DATA_PLUGIN, function() {
-                console.log('click')
+            }).on('click', DATA_PLUGIN, function(e) {
+                var plugin = that.plugins.ids[$(this).data('plugin')];
+                plugin && plugin.isNeedMainArea && that.events.trigger('sidebar.open');
+                e.stopPropagation();
+            }).on('click', function(e) {
+                e.stopPropagation();
             })
         },
 
         loadPlugin: function(plugin) {
             var plugins = this.plugins,
-                ids = plugins.ids,
-                id  = plugin.id;
+                ids     = plugins.ids,
+                id      = plugin.id,
+                events  = plugin.events,
+                el;
 
             if(id && !ids[id]) {
                 ids[id] = plugin;
@@ -58,7 +94,11 @@
                 plugin.id = id;
                 plugin.init();
 
-                plugin.el = this.els.root.find('[data-plugin=' + id + ']');
+                el = plugin.el = this.els.root.find('[data-plugin=' + id + ']');
+                for(var i in events) {
+                    el.on(i, events[i]);
+                }
+
                 if(plugin.hintContent) {
                     new Hint(plugin);
                 }
@@ -80,7 +120,7 @@
         /*
          用于动画展现的距离
         */
-        offset: 100,
+        offset: 80,
 
         show: function() {
             var el = this.el,
@@ -110,6 +150,54 @@
             }, 500, function() {
                 el.hide();
             });
+        }
+    };
+
+    /*
+     *  事件
+     */
+    function Events() {
+        this.events = {};
+    }
+
+    Events.prototype = {
+        constructor: Events,
+
+        on: function(id, fn, ctx) {
+            var e;
+            if(!(e = this.events[id])) {
+                e = this.events[id] = [];
+            }
+            fn.__ctx = ctx;
+            e.push(fn);
+            return this;
+        },
+
+        off: function(id, fn) {
+            var e, len;
+            if(e = this.events[id]) {
+                len = e.length;
+                while(len--) {
+                    if(fn === e[len]) {
+                        e.splice(len, 1);
+                    }
+                }
+                if(!e.length) {
+                    this.events[id] = null;
+                }
+            }
+            return this;
+        },
+
+        trigger: function(id) {
+            var e, fn;
+            if(e = this.events[id]) {
+                for(var i = 0, len = e.length; i < len; i++) {
+                    fn = e[i];
+                    fn && fn.call(fn.__ctx);
+                }
+            }
+            return this;
         }
     };
 
