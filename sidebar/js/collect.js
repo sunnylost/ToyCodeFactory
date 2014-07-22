@@ -1,19 +1,18 @@
 /**
  * @author: sunnylost | sunnylost@gmail.com
- * @date: 2014/7/19
- * @name: user
+ * @date: 2014/7/22
+ * @name: collect
  * @description:
- *      用户信息
+ *      回到顶部
  */
 !function(global) {
-    var Sidebar = global.Sidebar;
+    global.Sidebar.loadPlugin({
+        id: 'collect',
 
-    var user = Sidebar.loadPlugin({
-        id: 'user',
-
-        isNeedMainArea: false,
+        isNeedMainArea: true,
 
         init: function() {
+            this.hintContent = '我的收藏';
         },
 
         events: {

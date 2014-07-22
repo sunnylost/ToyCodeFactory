@@ -29,6 +29,9 @@
       用户信息
   \*------------------------------------*/
   /*------------------------------------*\
+    我的收藏
+  \*------------------------------------*/
+  /*------------------------------------*\
      回到顶部按钮
   \*------------------------------------*/
 }
@@ -93,6 +96,20 @@
 }
 .sidebar .avatar img {
   vertical-align: middle;
+}
+.sidebar .sec-collect {
+  bottom: 20%;
+}
+.sidebar .ico-collect {
+  display: block;
+  width: 35px;
+  height: 30px;
+  background: url('../assets/collect-normal.jpg') 50% 50%;
+  cursor: pointer;
+}
+.sidebar .active,
+.sidebar .ico-collect:hover {
+  background-image: url('../assets/collect-hover.jpg');
 }
 .sidebar .sec-go-top {
   bottom: 5px;

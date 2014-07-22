@@ -8,9 +8,26 @@
 !function(global) {
     var doc = global.document;
 
+    var noop = function() {};
+
+    var pluginBase = {
+        destroy: noop,
+
+        freeze: noop,
+
+        resume: noop,
+
+        loadTmpl: function() {
+            var tmpl = $('#tmpl-' + this.id);
+            tmpl.length && (this.__tmplFn = doT.template(tmpl));
+        }
+    };
+
     var DATA_PLUGIN  = '[data-plugin]';
     var STATE_OPENED = 'opened';
     var STATE_CLOSED = 'closed';
+
+    var CLASS_ACTIVE = 'active';
 
     function Sidebar() {
         this.init();
@@ -33,13 +50,13 @@
                 ids: {},
                 length: 0
             };
+            this.activePlugin = null;
         },
 
         initEvent: function() {
             var that = this,
                 els  = that.els,
-                root = els.root,
-                toolbar = els.toolbar;
+                root = els.root;
 
             $(doc).on('click', function() {
                 that.events.trigger('sidebar.close');
@@ -60,13 +77,18 @@
                             'right': '-280px'
                         }, 500)
                         .addClass(STATE_CLOSED)
-                        .removeClass(STATE_OPENED);;
+                        .removeClass(STATE_OPENED);
                     this.viewState = STATE_CLOSED;
+                    /* 清除当前活动的 plugin */
+                    var plugin = this.activePlugin;
+                    if(plugin && plugin.isNeedMainArea) {
+                        plugin.el.removeClass(CLASS_ACTIVE);
+                    }
                 }
             }, this);
 
             /* 注册与 hint 有关的事件 */
-            toolbar.on('mouseenter', DATA_PLUGIN, function() {
+            root.on('mouseenter', DATA_PLUGIN, function() {
                 var plugin = that.plugins.ids[$(this).data('plugin')];
                 plugin && plugin.hint && plugin.hint.show();
             }).on('mouseleave', DATA_PLUGIN, function(e) {
@@ -74,7 +96,11 @@
                 plugin && plugin.hint && plugin.hint.hide();
             }).on('click', DATA_PLUGIN, function(e) {
                 var plugin = that.plugins.ids[$(this).data('plugin')];
-                plugin && plugin.isNeedMainArea && that.events.trigger('sidebar.open');
+                if(plugin && plugin.isNeedMainArea) {
+                    that.events.trigger('sidebar.open');
+                    plugin.el.addClass(CLASS_ACTIVE);
+                    that.activePlugin = plugin;
+                }
                 e.stopPropagation();
             }).on('click', function(e) {
                 e.stopPropagation();
@@ -135,7 +161,7 @@
                 el.css('left', this.start);
             }
 
-            el.animate({
+            el.stop().animate({
                 left: this.end,
                 opacity: 1
             }, 500);
@@ -144,7 +170,7 @@
         hide: function() {
             var el = this.el;
 
-            el.animate({
+            el.stop().animate({
                 left: this.start,
                 opacity: 0
             }, 500, function() {
