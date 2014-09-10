@@ -4,15 +4,33 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Canvas</title>
     <style type="text/css">
-        #source {
-            display: block;
-            width: 200px;
+        .wrap {
+            position: relative;
+            width: 500px;
+            margin: auto;
+        }
+
+        #imgwrap {
+            height: 200px;
             margin: 50px auto;
+            text-align: center;
+        }
+
+        #imgwrap img {
+            width: 200px;
+        }
+
+        #choose {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
         }
 
         #show {
             width: 500px;
             margin: auto;
+            overflow: hidden;
         }
 
         #test {
@@ -30,19 +48,55 @@
             line-height: 100px;
             text-align: center;
         }
+
+        .text {
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
-<canvas id="test"></canvas>
-<img id="source" src=""height="" alt="测试图片">
-<div id="show">
+    <div class="wrap">
+        <canvas id="test"></canvas>
+        <div id="imgwrap">
+        </div>
+        <select id="choose">
+            <option>1.jpg</option>
+            <option>2.jpg</option>
+            <option>3.jpg</option>
+            <option>4.jpg</option>
+            <option>5.jpg</option>
+            <option>6.png</option>
+            <option>7.jpg</option>
+            <option>8.jpg</option>
+            <option>9.jpg</option>
+            <option>10.jpg</option>
+            <option>11.jpg</option>
+            <option>12.png</option>
+            <option>13.jpg</option>
+            <option>14.jpg</option>
+            <option>15.jpg</option>
+            <option>16.jpg</option>
+            <option>17.jpg</option>
+            <option>18.jpg</option>
+            <option>19.jpg</option>
+            <option>20.jpg</option>
+        </select>
+        <div id="show">
+            <div id="s0"></div>
+            <div id="s1"></div>
+            <div id="s2"></div>
+        </div>
+        <p class="text">
+            Most pictures from <a href="http://arcanis.github.io/colibri.js/demo/">here</a>.
+        </p>
+    </div>
 
-    <div id="s0"></div>
-    <div id="s1"></div>
-    <div id="s2"></div>
-</div>
 
 <script type="text/javascript">
+    var $ = function(id) {
+        return document.getElementById(id);
+    };
+
     var buckets = function() {
         var bins = [];
 
@@ -63,18 +117,33 @@
         return bins;
     }();
 
-    var picName = '7.jpg';
+    window.onload = choose.onchange = function() {
+        chooseImg(choose.selectedOptions[0].value);
+    };
 
-    var img = document.getElementById('source');
-    img.onload = function() {
-        var c = document.getElementById('test'),
-                ctx = c.getContext('2d'),
-                sum;
+    /**
+     * 选择图片
+     */
+    function chooseImg(src) {
+        var img = document.createElement('img');
+        img.id = 'source';
+        img.onload = analyse;
+        img.src = src;
+        imgwrap.innerHTML = '';
+        imgwrap.appendChild(img);
 
-        c.width = img.width;
-        c.height = img.height;
+        reset();
+    }
 
-        ctx.drawImage(img, 0, 0);
+    function analyse() {
+        var c = $('test'),
+            ctx = c.getContext('2d'),
+            sum;
+
+        c.width  = this.width;
+        c.height = this.height;
+
+        ctx.drawImage(this, 0, 0);
 
         var data = ctx.getImageData(0, 0, c.width, c.height).data;
 
@@ -114,14 +183,19 @@
             bcolor = '#' + fix([br, bg, bb]).join('');
             color  = '#' + fix([r, g, b]).join('');
 
-            console.log(bcolor);
             var el = document.getElementById('s' + i);
             el.style.backgroundColor = bcolor;
             el.style.color = color;
             el.innerHTML = bcolor;
         }
 
-    };
+    }
+
+    function reset() {
+        buckets.forEach(function(v, i) {
+           this[i].colors = [];
+        }, buckets)
+    }
 
     function fix(color) {
         color.forEach(function(v, i) {
@@ -155,7 +229,6 @@
         return buckets;
     }
 
-    img.src = picName;
 </script>
 
 </body>
