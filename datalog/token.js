@@ -23,7 +23,9 @@
 
         rblank = /\s/;
 
-    var EXCLAMATION  = 0x21,
+    var LF           = 0x0A,
+        CR           = 0x0D,
+        EXCLAMATION  = 0x21,
         DOUBLE_QUOTE = 0x22,
         PERCENT      = 0x25,
         COLON        = 0x3A;
@@ -52,8 +54,8 @@
     }
 
     function scanIdentifier() {
-        var identifier = '',
-            column = curPos + 1;
+        var identifier = '';
+        column += 1;
 
         while(isIdentifier(ch = input[curPos++])) {
             identifier += ch;
@@ -66,14 +68,22 @@
             value: identifier,
             column: column,
             line: line
-        })
+        });
+
+        column += identifier.length;
     }
 
     function isLineTerminator(ch) {
-        return (ch === 0x0A) || (ch === 0x0D) || (ch === 0x2028) || (ch === 0x2029);
+        return (ch === LF) || (ch === CR) || (ch === 0x2028) || (ch === 0x2029);
     }
 
     function scanLineTerminator() {
+        var ch = input[curPos].charCodeAt(0);
+        if(ch === CR && input[curPos + 1].charCodeAt(0) === LF) {
+            curPos += 2;
+        } else {
+            curPos += 1;
+        }
         line += 1;
         column = 1;
     }
@@ -102,7 +112,7 @@
                 line: line
             });
             curPos = index + 1;
-            column = curPos + 1;
+            column += 1;
         } else {
             throw Error('line %i, column %i String literal must end with a double quote.', line, column);
         }
@@ -117,7 +127,7 @@
                 tokens.push({
                     type: TOKEN_TYPE.Comment,
                     value: input.slice(curPos + 1, lineBreak),
-                    column: curPos + 1,
+                    column: column + 1,
                     line: line
                 });
 
@@ -160,7 +170,9 @@
                 line: line
             });
 
-            return column = (curPos += 2) + 1
+            curPos += 2;
+            column += 3;
+            return;
         }
 
         if(ch === EXCLAMATION) {
@@ -173,7 +185,9 @@
                 line: line
             });
 
-            return column = (curPos += 2) + 1;
+            curPos += 2;
+            column += 3;
+            return;
         }
 
         tokens.push({
@@ -183,7 +197,9 @@
             line: line
         });
 
-        return column = (curPos += 1) + 1;
+        curPos += 1;
+        column += 2;
+        return;
     }
 
     function expect(t) {
@@ -200,16 +216,16 @@
             var c  = input[curPos],
                 ch = c.charCodeAt(0);
 
-            if(isIdentifier(c)) {
+            if(isPunctuator(c)) {
+                scanPunctuator();
+            } else if(isLineTerminator(ch)) {
+                scanLineTerminator();
+            } else if(isIdentifier(c)) {
                 scanIdentifier();
             } else if(ch === DOUBLE_QUOTE) {
                 scanString();
             } else if(ch === PERCENT) {
                 skipComment();
-            } else if(isPunctuator(c)) {
-                scanPunctuator();
-            } else if(isLineTerminator(ch)) {
-                scanLineTerminator();
             } else if(isWhiteSpace(c)) {
                 skipWhiteSpace();
             } else {
@@ -234,9 +250,4 @@
     }
 }(window);
 
-var source = 'edge(a, b). edge(b, c). edge(c, d). edge(d, a).\n\
-              path(X, Y) :- edge(X, Y).\n\
-              path(X, Y) :- edge(X, Z), path(Z, Y).\n\
-              path(X, Y)?';
-
-console.log(tokenize(source));
+console.log(tokenize(source.innerHTML));
