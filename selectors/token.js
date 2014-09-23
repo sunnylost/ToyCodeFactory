@@ -113,30 +113,6 @@
         };
     }
 
-
-    function isPunctuator(c) {
-        switch(c) {
-            case '#':
-            case '.':
-            case ',':
-            case '+':
-            case '>':
-            case '~':
-            case '=':
-            case '|':
-            case '^':
-            case '$':
-            case '*':
-            case ':':
-            case '@':
-            case '%':
-            case '(':
-            case ')':
-                return true;
-        }
-        return false;
-    }
-
     function scanPunctuator() {
         var c = input[tokPos];
 
@@ -151,7 +127,32 @@
                 });
                 tokPos++;
                 return scanName();
+
+            case '*':
+            case ',':
+                tokPos++;
+                return {
+                    type: tokType.Punctuator,
+                    start: tokPos,
+                    end: tokPos + 1,
+                    value: c
+                };
+
+            case '[':
+                tokPos++;
+                tokens.push({
+                    type: tokType.Punctuator,
+                    start: tokPos,
+                    end: tokPos + 1,
+                    value: c
+                });
+                return scanAttribute();
+
+            case ':':
+                return isPseudoElement() ? scanPseudoElement() : scanPseudoClass();
         }
+
+        return null;
     }
 
     function scanName() {
@@ -161,12 +162,89 @@
 
         tokPos--;
 
+        if(start == tokPos) throw Error('column ' + start + ' is not a name.');
+
         return {
             type: tokType.Identifier,
             start: start + 1,
             end: tokPos + 1,
             value: input.slice(start, tokPos)
         };
+    }
+
+    function scanAttribute() {
+        tokens.push(scanName());
+
+        var c  = input[tokPos],
+            start = tokPos + 1;
+
+        switch(c) {
+            case '=':
+                tokPos++;
+                tokens.push({
+                    type: tokType.Punctuator,
+                    start: start,
+                    end: start + 1,
+                    value: c
+                });
+                break;
+
+            case '~':
+            case '|':
+            case '^':
+            case '$':
+            case '*':
+                tokPos++;
+                expect('=');
+                --tokPos;
+                tokens.push({
+                    type: tokType.Punctuator,
+                    start: start,
+                    end: start + 1,
+                    value: input.slice(tokPos, tokPos += 2)
+                });
+                break;
+
+            case ']':
+                tokPos++;
+                return {
+                    type: tokType.Punctuator,
+                    start: start,
+                    end: start + 1,
+                    value: c
+                }
+        }
+
+        tokens.push(isStringLiteralBegin(input[tokPos].charCodeAt(0)) ? scanStringLiteral() : scanName());
+
+        if(input[tokPos] != ']') {
+            throw Error('Attribute selector did not finished correctly.');
+        }
+
+        return {
+            type: tokType.Punctuator,
+            start: tokPos,
+            end: tokPos + 1,
+            value: input[tokPos]
+        };
+    }
+
+    function isPseudoElement() {
+
+    }
+
+    function scanPseudoElement() {
+
+    }
+
+    function scanPseudoClass() {
+
+    }
+
+    function expect(c) {
+        if(input.slice(tokPos, tokPos + c.length) !== c) {
+            throw Error('column ' + (tokPos + 1) + ' need ' + c);
+        }
     }
 
     function advance() {
@@ -189,11 +267,7 @@
             return scanStringLiteral();
         }
 
-        if(isPunctuator(c)) {
-            return scanPunctuator();
-        }
-
-        return {
+        return scanPunctuator() || {
             type: tokType.EOF
         };
     }
@@ -223,4 +297,4 @@
     global.tokenize = tokenize;
 }(window));
 
-console.log(tokenize(' "123 fdas" \'da\' #test div.active'));
+console.log(tokenize('#select2 option[selected^=\'selected\']'));
