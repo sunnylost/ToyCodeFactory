@@ -9,7 +9,9 @@
             Identifier: 2,
             StringLiteral: 3,
             WhiteSpace: 4,
-            Punctuator: 5
+            Punctuator: 5,
+            PseudoElement: 6,
+            PseudoClass: 7
         },
 
         isDoubleQuote = false,
@@ -149,7 +151,8 @@
                 return scanAttribute();
 
             case ':':
-                return isPseudoElement() ? scanPseudoElement() : scanPseudoClass();
+                tokPos++;
+                return input[tokPos] === ':' ? scanPseudoElement() : scanPseudoClass();
         }
 
         return null;
@@ -212,7 +215,8 @@
                     start: start,
                     end: start + 1,
                     value: c
-                }
+                };
+
         }
 
         tokens.push(isStringLiteralBegin(input[tokPos].charCodeAt(0)) ? scanStringLiteral() : scanName());
@@ -229,12 +233,54 @@
         };
     }
 
-    function isPseudoElement() {
-
-    }
-
     function scanPseudoElement() {
+        var c = input[++tokPos],
+            token = {
+                start: tokPos - 2,
+                type: tokType.PseudoElement
+            };
 
+        switch(c.toLowerCase()) {
+            case 'a':
+                if('after' === input.slice(tokPos, tokPos + 5).toLowerCase()) {
+                    token.value = '::after';
+                    token.end = token.start + 7;
+                    tokPos += 5;
+                    break;
+                } else {
+                    throw Error('column ' + start + ' need ::after');
+                }
+
+            case 'b':
+                if('before' === input.slice(tokPos, tokPos + 6).toLowerCase()) {
+                    token.value = '::before';
+                    token.end = token.start + 8;
+                    tokPos += 6;
+                    break;
+                } else {
+                    throw Error('column ' + start + ' need ::before');
+                }
+
+            case 'f':
+                if('first-line' === input.slice(tokPos, tokPos + 10).toLowerCase()) {
+                    token.value = '::first-line';
+                    token.end = token.start + 12;
+                    tokPos += 10;
+                    break;
+                } else if('first-letter' === input.slice(tokPos, tokPos + 12).toLowerCase()) {
+                    token.value = '::first-letter';
+                    token.end = token.start + 14;
+                    tokPos += 12;
+                    break;
+                } else {
+                    throw Error('column ' + start + ' need ::first-line or ::first-letter');
+                }
+
+            default:
+                throw Error('column ' + token.start + ' need a pseudo element')
+        }
+
+        return token;
     }
 
     function scanPseudoClass() {
@@ -297,4 +343,4 @@
     global.tokenize = tokenize;
 }(window));
 
-console.log(tokenize('#select2 option[selected^=\'selected\']'));
+console.log(tokenize('#qunit-fixture div::first-line p:FIRST-CHILD'));
