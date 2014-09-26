@@ -284,7 +284,148 @@
     }
 
     function scanPseudoClass() {
+        var c,
+            isValid,
+            pseudoClass = '',
+            rpseudoClass = /[-a-zA-Z]/;
+        /**
+         * currently, pseudo class'name is composited by a-zA-Z and -
+         */
+        while((c = input[tokPos]) && rpseudoClass.test(c)) {
+            pseudoClass += c;
+            tokPos++;
+        }
 
+        pseudoClass = pseudoClass.toLowerCase();
+        var len = pseudoClass.length;
+
+        if(input[++tokPos] === '(') {
+            return scanFunction(pseudoClass);
+        }
+
+        switch(len) {
+            case 4:
+                switch(pseudoClass) {
+                    case 'link':
+                    case 'past':
+                    case 'root':
+                        isValid = true;
+                }
+                break;
+
+            case 5:
+                switch(pseudoClass) {
+                    case 'blank':
+                    case 'empty':
+                    case 'focus':
+                    case 'hover':
+                    case 'scope':
+                    case 'valid':
+                        isValid = true;
+                }
+                break;
+
+            case 6:
+                switch(pseudoClass) {
+                    case 'active':
+                    case 'future':
+                    case 'target':
+                        isValid = true;
+                }
+                break;
+
+            case 7:
+                switch(pseudoClass) {
+                    case 'checked':
+                    case 'current':
+                    case 'default':
+                    case 'enabled':
+                    case 'invalid':
+                    case 'visited':
+                        isValid = true;
+                }
+                break;
+
+            case 8:
+                switch(pseudoClass) {
+                    case 'any-link':
+                    case 'disabled':
+                    case 'in-range':
+                    case 'optional':
+                    case 'required':
+                        isValid = true;
+                }
+                break;
+
+            case 9:
+                switch(pseudoClass) {
+                    case 'read-only':
+                        isValid = true;
+                }
+                break;
+
+            case 10:
+                switch(pseudoClass) {
+                    case 'last-child':
+                    case 'only-child':
+                    case 'read-write':
+                    case 'valid-drop':
+                        isValid = true;
+                }
+                break;
+
+            case 11:
+                switch(pseudoClass) {
+                    case 'active-drop':
+                    case 'first-child':
+                        isValid = true;
+                }
+                break;
+
+            case 12:
+                switch(pseudoClass) {
+                    case 'invalid-drop':
+                    case 'last-of-type':
+                    case 'only-of-type':
+                    case 'out-of-range':
+                        isValid = true;
+                }
+                break;
+
+            case 13:
+                switch(pseudoClass) {
+                    case 'first-of-type':
+                    case 'indeterminate':
+                        isValid = true;
+                }
+                break;
+
+            case 17:
+                switch(pseudoClass) {
+                    case 'placeholder-shown':
+                        isValid = true;
+                }
+                break;
+
+            default:
+                isValid = false;
+        }
+
+        console.log(pseudoClass);
+
+        if(isValid) {
+            return {
+                type: tokType.PseudoClass,
+                start: tokPos - pseudoClass.length,
+                end: tokPos + 1,
+                value: pseudoClass
+            }
+        } else {
+            throw Error(pseudoClass + ' is not a valid pseudo class name!');
+        }
+    }
+
+    function scanFunction(fnName) {
     }
 
     function expect(c) {
@@ -337,10 +478,12 @@
 
         check();
 
+        isDoubleQuote = isSingleQuote = false;
+
         return tokens;
     }
 
     global.tokenize = tokenize;
 }(window));
 
-console.log(tokenize('#qunit-fixture div::first-line p:FIRST-CHILD'));
+console.log(tokenize('#qunit-fixture div:hover'));
