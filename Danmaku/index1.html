@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>Danmaku</title>
+    <style type="text/css" media="screen">
+        #stage {
+            position: relative;
+            width: 80%;
+            height: 500px;
+            margin: auto;
+            background-color: #ccc;
+            overflow: hidden;
+        }
+
+        .message {
+            position: absolute;
+            left: 100%;
+            padding: 3px;
+            max-width: 400px;
+            font-size: 16px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all linear;
+            transform: translateZ(0);
+        }
+
+        .theme-1 {
+            background-color: #20cfa1;
+        }
+
+        .theme-2 {
+            background-color: #37bd2e;
+        }
+
+        .theme-3 {
+            background-color: #2470eb;
+        }
+
+        .theme-4 {
+            background-color: #ebd024;
+        }
+    </style>
+</head>
+<body>
+<button id="button">Start</button>
+    <article id="stage"></article>
+    <script type="text/javascript" src="data.js"></script>
+
+    <script type="text/javascript">
+        "use strict"
+
+        var DOC   = document,
+            DUMMY = DOC.createElement('div')
+
+        function Danmaku(el) {
+            this.el        = el
+            this.pool      = []
+            this.running   = []
+            this.maxNum    = 50
+            this.maxCol    = 16 //TODO
+            this.colorNum  = 4
+            this.maxHeight = el.offsetHeight
+            this.maxWidth  = el.offsetWidth
+            this.init()
+        }
+
+        Danmaku.prototype = {
+            constructor: Danmaku,
+
+            init: function() {
+                var pool    = this.pool,
+                    running = this.running,
+                    maxNum  = this.maxNum,
+                    maxCol  = this.maxCol,
+                    i       = 0,
+                    bul
+
+                for(; i < maxNum; i++) {
+                    bul = new Bullet( datas.shift(), this );
+                    if( i < maxCol ) {
+                        running.push( bul )
+                        bul.start()
+                    } else {
+                        pool.push( bul )
+                    }
+                }
+
+                this.start( performance.now() )
+            },
+
+            /**
+            * Event Handler
+            */
+            handler: function() {
+            },
+
+            start: function(curTime) {
+                var that = this,
+                    running = that.running
+
+                running.forEach( function( bul, i ) {
+                    if( bul.move( curTime )) {
+                        that.pool.push( running.splice( i, 1 ) )
+                    }
+                } )
+
+                requestAnimationFrame(this.start.bind(this))
+            }
+        }
+
+        function Bullet( content, context ) {
+            this.context = context
+            this.init( content )
+        }
+
+        Bullet.prototype = {
+            constructor: Bullet,
+
+            defaultClassName: 'ready message',
+
+            tmpl: '<div>$content</div>',
+
+            init: function( content ) {
+                var rect, el,
+                    r = Math.random(),
+                    ctxWidth = this.context.maxWidth
+
+                DUMMY.innerHTML = this.tmpl.replace( '$content', content )
+                el   = this.el = DUMMY.firstChild
+                el.className = this.defaultClassName + ' theme-' + parseInt( 1 + r * 4 )
+                this.context.el.appendChild( el )
+                rect = el.getBoundingClientRect()
+
+                this.style   = el.style
+                this.content = content
+                this.width   = rect.right  - rect.left
+                this.height  = rect.bottom - rect.top
+                this.dist    = -1 * this.width
+                this.speed   = ctxWidth / parseInt( 600 + r * 1000 ) //TODO
+                this.style.left = (this.left = ctxWidth) + 'px'
+                this.startTime  = 0
+            },
+
+            start: function() {
+                this.startTime = performance.now()
+            },
+
+            move: function( curTime ) {
+                this.style.left = ( this.left -= this.speed * ( curTime - this.startTime ) / 1000 ).toFixed(2) + 'px'
+                return this.left <= this.dist
+            },
+
+            reset: function( content ) {
+                this.init( content )
+            }
+        }
+
+        var d = new Danmaku( document.getElementById( 'stage' ) )
+
+        button.onclick = function() {
+            d.start();
+        }
+    </script>
+</body>
+</html>
