@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>Danmaku</title>
+    <style type="text/css" media="screen">
+        #stage {
+            position: relative;
+            width: 80%;
+            height: 500px;
+            margin: auto;
+            background-color: #ccc;
+            overflow: hidden;
+        }
+
+        .message {
+            position: absolute;
+            left: 100%;
+            padding: 3px;
+            max-width: 400px;
+            font-size: 16px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all linear;
+            transform: translateZ(0);
+        }
+
+        .theme-1 {
+            background-color: #20cfa1;
+        }
+
+        .theme-2 {
+            background-color: #37bd2e;
+        }
+
+        .theme-3 {
+            background-color: #2470eb;
+        }
+
+        .theme-4 {
+            background-color: #ebd024;
+        }
+    </style>
+</head>
+<body>
+<button id="button">Start</button>
+    <article id="stage"></article>
+    <script type="text/javascript" src="data.js"></script>
+
+    <script type="text/javascript">
+        "use strict"
+
+        function Danmaku(el) {
+            this.el   = el
+            this.pool = []
+            this.num  = 50
+            this.colorNum = 4
+            this.maxHeight = el.offsetHeight
+            this.maxWidth  = el.offsetWidth
+            this.init()
+        }
+
+        Danmaku.prototype = {
+            constructor: Danmaku,
+
+            init: function() {
+                var itemTmpl = '<div class="ready message"></div>'
+
+                this.el.innerHTML = new Array(this.num + 1).join(itemTmpl)
+                this.pool = this.pool.slice.call(this.el.getElementsByClassName('message'))
+                this.el.addEventListener('click', this.handler.bind(this))
+            },
+
+            /**
+            * Event Handler
+            */
+            handler: function() {
+            },
+
+            start: function() {
+                var pool = this.pool,
+                    data = datas,
+                    dLen = datas.length,
+                    mh   = this.maxHeight,
+                    mw   = this.maxWidth,
+                    el, msg, style, r
+
+                for(var i = 0, len = pool.length; i < len; i++) {
+                    el = pool[i]
+                    r = Math.random()
+                    el.innerHTML = msg = datas[parseInt(r * dLen)]
+                    el.className += ' theme-' + parseInt(1 + r * 4)
+                    style = el.style
+                    style.top = parseInt(r * mh) + 'px'
+                    style.transitionDelay = parseInt(5 * r) + 's'
+                    /*
+                      ax + b = y
+
+                      a + b = 10
+                      30a + b = 5
+
+                      a = -5/29
+                      b = 295/29
+                    */
+                    style.transitionDuration = parseInt((msg.length * (-4/29) + 154/29)) + 's'
+                    setTimeout(function(el) {
+                        return function() {
+                            var rect = el.getBoundingClientRect()
+                            el.style.transform = 'translate3d(-' + (mw + rect.right - rect.left) + 'px, 0, 0)'
+
+                            console.log('translateX(-' + (mw + rect.right - rect.left) + 'px)')
+                        }
+                    }(el), 1000 * Math.random())
+                }
+            }
+        }
+
+        var d = new Danmaku(document.getElementById('stage'))
+
+        button.onclick = function() {
+            d.start();
+        }
+    </script>
+</body>
+</html>
