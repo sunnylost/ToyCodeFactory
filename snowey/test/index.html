@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Snow</title>
+    <style>
+        #clearing {
+            position: relative;
+            width: 80%;
+            height: 500px;
+            margin: auto;
+            background-color: #0E3EB0;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="clearing">
+        <div class="snow"></div>
+    </div>
+    <script src="../src/snowey.js"></script>
+    <script>
+        (function() {
+            var snowey = new Snowey
+            snowey.setConfig({
+                el: '#clearing'
+            }).snowing()
+        })()
+    </script>
+</body>
+</html>
