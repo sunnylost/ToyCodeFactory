@@ -24,14 +24,77 @@
         VERTICAL       = 'vertical',
         HORIZONTAL     = 'horizontal'
 
+    function parseMarginOrPadding( val ) {
+        var arr = val.split( ' ' ),
+            len = 4,
+            tmp = []
+
+        if ( !val ) {
+            arr = tmp = [ 0, 0, 0, 0 ]
+        } else {
+            while ( len-- ) {
+                tmp[ len ] = parseInt( arr[ len ] )
+            }
+        }
+
+        switch ( arr.length ) {
+            case 1:
+                v = tmp[ 0 ]
+                return {
+                    top:    v,
+                    left:   v,
+                    right:  v,
+                    bottom: v
+                }
+                break
+
+            case 2:
+                return {
+                    top:    tmp[ 0 ],
+                    left:   tmp[ 1 ],
+                    right:  tmp[ 1 ],
+                    bottom: tmp[ 0 ]
+                }
+                break
+
+            case 3:
+                return {
+                    top:    tmp[ 0 ],
+                    left:   tmp[ 1 ],
+                    right:  tmp[ 1 ],
+                    bottom: tmp[ 2 ]
+                }
+                break
+
+            case 4:
+                return {
+                    top:    tmp[ 0 ],
+                    right:  tmp[ 1 ],
+                    bottom: tmp[ 2 ],
+                    left:   tmp[ 3 ]
+                }
+        }
+    }
+
+    //TODO
+    function parseCSSVal( val ) {
+        if ( val == 'auto' ) {
+            return 0
+        } else {
+            return parseInt( val )
+        }
+    }
+
     function Sticky( config ) {
         this.config = config
         this.$el    = $( config.el )
         this.rect   = {}
         this.state  = {
             hasHolder:             false,
+            isFixed:               false,
             isVerticalFixed:       false,
             isHorizontalFixed:     false,
+            isQualified:           true,
             isVerticalQualified:   true,
             isHorizontalQualified: true
         }
@@ -73,62 +136,77 @@
         },
 
         generateHolder: function() {
-            var config       = this.config,
-                state        = this.state,
-                $el          = this.$el,
-                $placeholder = $( '<x-faketag>' ),
-                elStyle
-
-            $el.css( {
-                position: 'relative',
-                top:      0,
-                left:     config.left + 'px'
-            } )
-
-            elStyle = getComputedStyle( $el[ 0 ] )
-
-            this.holderCSS = replicateAttrs.map( function( v ) {
-                return v + ':' + elStyle[ v ]
-            } ).join( ';' )
-
-            $placeholder[ 0 ].style.cssText = this.holderCSS + ';top:0;display:none;'
+            var config = this.config,
+                state  = this.state,
+                $el    = this.$el,
+                $placeholder, elStyle
 
             if ( !state.hasHolder ) {
+                $placeholder    = $( '<x-faketag>' )
                 state.hasHolder = true
+
+                $el.css( {
+                    position: 'relative',
+                    top:      0,
+                    left:     config.left + 'px'
+                } )
+
+                elStyle = getComputedStyle( $el[ 0 ] )
+
+                this.holderCSS = replicateAttrs.map( function( v ) {
+                    return v + ':' + elStyle[ v ]
+                } ).join( ';' )
+
                 $el.after( $placeholder )
+                this.$placeholder = $placeholder
+            } else {
+                $placeholder = this.$placeholder
             }
 
-            this.$placeholder = $placeholder
+            $placeholder[ 0 ].style.cssText = this.holderCSS + ';top:0;display:none;'
 
             return this
         },
 
+        computeBoxModel: function( el ) {
+            var offset = el.offset()
+
+            return {
+                margin:  parseMarginOrPadding( el.css( 'margin' ) ),
+                padding: parseMarginOrPadding( el.css( 'padding' ) ),
+                width:   offset.width,
+                height:  offset.height
+            }
+        },
+
         //TODO
         computePosition: function() {
-            var config         = this.config,
-                rect           = this.rect,
-                $el            = this.$el,
-                $parent        = $el.parent(),
+            var config    = this.config,
+                rect      = this.rect,
+                $el       = this.$el,
+                $parent   = $el.parent(),
 
-                elPos          = $el.position(),
-                elOffset       = $el.offset(),
-                pOffset        = $parent.offset(),
-                height         = $el.height(),
-                width          = $el.width(),
+                elPos     = $el.position(),
+                elOffset  = $el.offset(),
+                pOffset   = $parent.offset(),
 
-                parentPos      = $parent.position(),
-                pTop           = parentPos.top,
-                pLeft          = parentPos.left,
-                pPaddingTop    = parseInt( $parent.css( 'padding-top' ) ),
-                pPaddingLeft   = parseInt( $parent.css( 'padding-left' ) ),
-                pPaddingBottom = parseInt( $parent.css( 'padding-bottom' ) ),
-                pMarginTop     = parseInt( $parent.css( 'margin-top' ) ),
-                pMarginLeft    = parseInt( $parent.css( 'margin-left' ) ),
-                pMarginBottom  = parseInt( $parent.css( 'margin-bottom' ) ),
-                bottom         = $el.css( 'bottom' ),
-                right          = $el.css( 'right' ),
-                top            = elPos.top,
-                left           = elPos.left
+                elBox     = this.computeBoxModel( $el ),
+                pBox      = this.computeBoxModel( $parent ),
+
+                parentPos = $parent.position(),
+                pTop      = parentPos.top,
+                pLeft     = parentPos.left,
+                bottom    = parseCSSVal( $el.css( 'bottom' ) ),
+                right     = parseCSSVal( $el.css( 'right' ) ),
+                top       = elPos.top,
+                left      = elPos.left
+
+            if ( right == 'auto' ) {
+                right = 0
+            }
+
+            this.elBox = elBox
+            this.pBox  = pBox
 
             //console.log( $el.offset(), $parent.offset() )
             //TODO
@@ -137,25 +215,25 @@
 
             rect.constraint = config
 
-            pTop  = pTop - pPaddingTop - pMarginTop
-            pLeft = pLeft - pPaddingLeft - pMarginLeft
+            pTop  = pTop - pBox.padding.top - pBox.margin.top
+            pLeft = pLeft - pBox.padding.left - pBox.margin.left
             top   = pTop > top ? pTop : top
             left  = pLeft > left ? pLeft : left
 
             rect.offset = {
                 top:    top,
                 left:   left,
-                bottom: top + $parent.height() - ( bottom == 'auto' ? 0 : bottom ) - pPaddingBottom - pMarginBottom - height,
-                right:  left + $parent.width() - ( right == 'auto' ? 0 : right ) - pPaddingLeft - pMarginLeft - width
+                bottom: top + pBox.height - bottom - pBox.padding.top - pBox.padding.bottom - elBox.height - config.top,
+                right:  left + pBox.width - right - pBox.padding.left - pBox.padding.right - elBox.width - config.left
             }
 
             //TODO
-            config.bottom = rect.offset.bottom
-            config.right  = rect.offset.right
+            config.bottom = rect.offset.bottom - top
+            config.right  = rect.offset.right - left
 
             rect.old = {
                 left:   elOffset.left,
-                top:    elOffset.top,
+                top:    0,
                 bottom: bottom,
                 right:  right
             }
@@ -172,6 +250,7 @@
 
             if ( isVertical && state.isVerticalQualified ) {
                 difference = offsetRect.top - scrollTop
+                //console.log( difference, constraintRect.top, scrollTop, offsetRect.bottom )
                 //TODO
                 if ( difference < constraintRect.top && scrollTop < offsetRect.bottom ) {
                     this.fixed( VERTICAL, scrollLeft, scrollTop )
@@ -182,6 +261,7 @@
 
             if ( !isVertical && state.isHorizontalQualified ) {
                 difference = offsetRect.left - scrollLeft
+                //console.log( difference, constraintRect.left )
                 //TODO
                 if ( difference < constraintRect.left && scrollLeft < offsetRect.right ) {
                     this.fixed( HORIZONTAL, scrollTop, scrollLeft )
@@ -192,22 +272,27 @@
         },
 
         fixed: function( dir, scrollVal, scrollTop ) {
-            //console.log( 'fixed', dir, scrollTop )
+            //console.log( 'fixed', dir, scrollVal, scrollTop )
             var $el            = this.$el,
+                elBox          = this.elBox,
+                elPadding      = elBox.padding,
                 state          = this.state,
                 rect           = this.rect,
                 constraintRect = rect.constraint,
+                offsetRect     = rect.offset,
                 old            = rect.old,
                 difference
 
             //TODO
-            if ( !state.isVerticalFixed && !state.isHorizontalFixed ) {
+            if ( !state.isFixed ) {
+                state.isFixed = true
                 $el.css( {
                     position: 'fixed',
                     //TODO
                     margin:   0,
-                    width:    $el.width() - parseInt( $el.css( 'padding-left' ) ) - parseInt( $el.css( 'padding-right' ) ),
-                    height:   $el.height() - parseInt( $el.css( 'padding-top' ) ) - parseInt( $el.css( 'padding-bottom' ) ),
+                    top:      constraintRect.top,
+                    width:    elBox.width - elPadding.left - elPadding.right,
+                    height:   elBox.height - elPadding.top - elPadding.bottom,
                 } )
             }
 
@@ -216,7 +301,7 @@
                 $el.css( 'top', constraintRect.top )
 
                 if ( !state.isHorizontalFixed ) {
-                    difference = old.left - scrollVal
+                    difference = offsetRect.left - scrollVal
                     $el.css( 'left', difference )
                 }
             } else {
@@ -224,7 +309,7 @@
                 $el.css( 'left', constraintRect.left )
 
                 if ( !state.isVerticalFixed ) {
-                    difference = old.top - scrollVal
+                    difference = offsetRect.top - scrollVal
                     $el.css( 'top', difference )
                 }
             }
@@ -236,22 +321,40 @@
         },
 
         restore: function( dir, scrollVal ) {
-            //console.log( 'restore', dir )
-            var $el     = this.$el,
-                state   = this.state,
-                oldRect = this.rect.old
+            var $el            = this.$el,
+                state          = this.state,
+                rect           = this.rect,
+                offsetRect     = rect.offset,
+                constraintRect = rect.constraint,
+                oldRect        = rect.old,
+                val
 
             //TODO
             if ( dir == VERTICAL ) {
-                state.isVerticalFixed = false
-                $el.css( 'top', oldRect.top - scrollVal )
+                val = offsetRect.bottom
+                //TODO: optimise
+                if ( scrollVal >= val ) {
+                    $el.css( 'top', constraintRect.top - scrollVal + val )
+                    state.isVerticalFixed = true
+                } else if ( state.isFixed && ( offsetRect.top - scrollVal ) > constraintRect.top ) {
+                    $el.css( 'top', constraintRect.top - scrollVal + offsetRect.top )
+                    state.isVerticalFixed = false
+                }
             } else {
-                state.isHorizontalFixed = false
-                $el.css( 'left', oldRect.left - scrollVal )
+                val = offsetRect.right
+                //console.log( scrollVal, val )
+                if ( scrollVal >= val ) {
+                    $el.css( 'left', constraintRect.left - scrollVal + val )
+                    state.isHorizontalFixed = true
+                } else if ( state.isFixed && ( offsetRect.left - scrollVal ) > constraintRect.left ) {
+                    $el.css( 'left', constraintRect.left - scrollVal + offsetRect.left )
+                    state.isHorizontalFixed = false
+                }
             }
 
             //TODO
             if ( !state.isVerticalFixed && !state.isHorizontalFixed ) {
+                state.isFixed          = false
                 $el[ 0 ].style.cssText = this.holderCSS
                 this.$placeholder.hide()
             }

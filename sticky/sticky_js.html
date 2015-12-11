@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./lib/normalize.css">
     <style>
         body {
+			/*width: 2000px;*/
             font-size        : 20px;
             color            : #ccc;
             background-color : #f8f8f8;
@@ -179,26 +180,30 @@
 		</section>
 	</div>
 <script>
-    $( '.block_1 .sticky_title' ).sticky( {
-        top:  10,
-        left: 0
-    } )
+	( function() {
+		$( '.block_1 .sticky_title' ).sticky( {
+			top:  10,
+			left: 0
+		} )
 
-    $( '.block_2 .sticky_title' ).sticky( {
-        top:  0,
-        left: 0
-    } )
+		$( '.block_2 .sticky_title' ).sticky( {
+			top:  0,
+			left: 0
+		} )
 
-    $( '.block_3 .sticky_title' ).sticky( {
-        top:  100
-    } )
+		$( '.block_3 .sticky_title' ).sticky( {
+			top:  100
+		} )
 
-	$( '.block_4 .sticky_title' ).sticky()
+		$( '.block_4 .sticky_title' ).sticky()
 
-	$( '.block_5 .sticky_title' ).sticky( {
-		top : 200,
-		left : 20
-	} )
+		$( '.block_5 .sticky_title' ).sticky( {
+			top : 200,
+			left : 20
+		} )
+
+		return
+	}() )
 </script>
 </body>
 </html>
