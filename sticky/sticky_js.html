@@ -34,13 +34,13 @@
 
         /* 纵向滚动时，只有设定top值之后才生效，left值不影响效果 */
         .block_1 { width: 1000px; }
-        .block_1 .sticky_title {  top : 10px; width:50%; }
+        .block_1 .sticky_title { width:50%; }
 
         /* sticky元素不影响生效后的文档流 */
         .block_2 { padding : 20px 0; }
 
         /* sticky元素top值是距离窗口顶部的值，与父元素定位无关 */
-        .block_3 .sticky_title { top : 100px; margin-bottom : 100px; }
+        .block_3 .sticky_title { margin-bottom : 100px; }
 
         .block_8 { display : none; position : absolute; margin-top : 100px; top : 300px; left : 0; width : 100%; box-sizing : border-box; background-color : red; }
 
@@ -50,7 +50,7 @@
         .block_4 .sticky_title { margin-top : 30px; }
 
         /* left和top不影响文档流，所以和position:relative;还是有区别的 */
-        .block_5 .sticky_title { width : 60%; left : 20px; top : 200px; }
+        .block_5 .sticky_title { width : 60%; }
 
         /*但是脱离文档流之后，left和right值会按方向生效 */ /*todo*/
         .block_7 .sticky_title { width : 30%; float : left; left : 20px; top : -10px; }
@@ -192,6 +192,13 @@
     $( '.block_3 .sticky_title' ).sticky( {
         top:  100
     } )
+
+	$( '.block_4 .sticky_title' ).sticky()
+
+	$( '.block_5 .sticky_title' ).sticky( {
+		top : 200,
+		left : 20
+	} )
 </script>
 </body>
 </html>
