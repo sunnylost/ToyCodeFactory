@@ -23,6 +23,7 @@
 
         VERTICAL       = 'vertical',
         HORIZONTAL     = 'horizontal',
+        SCROLL_EVENT   = 'scroll.sticky',
         stickyStyleName
 
     function isSupportSticky() {
@@ -379,20 +380,18 @@
             sticky.state.isQualified && globalSticky.push( sticky )
         } )
 
+        $win.triggerHandler( SCROLL_EVENT, { isForced: true } )
+
         console.log( globalSticky )
     }
 
-    $win.on( 'scroll', function() {
+    function handleScroll( e, data ) {
         var scrollTop  = $win.scrollTop(),
             scrollLeft = $win.scrollLeft(),
             isVertical
 
-        if ( !prevScrollTop ) {
-            prevScrollTop = scrollTop
-        }
-
-        if ( !prevScrollLeft ) {
-            prevScrollLeft = scrollLeft
+        if ( data && data.isForced ) {
+            prevScrollLeft = prevScrollTop = 0
         }
 
         if ( scrollLeft == prevScrollLeft ) {
@@ -409,6 +408,8 @@
         globalSticky.forEach( function( v ) {
             v.check( scrollTop, scrollLeft, isVertical )
         } )
-    } )
+    }
+
+    $win.on( SCROLL_EVENT, handleScroll )
 
 }( window, $ ))
