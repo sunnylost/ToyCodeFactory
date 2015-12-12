@@ -121,11 +121,13 @@
             if ( !isSupportSticky() ) {
                 this
                     .isQualified()
+                    .prepareCompute()
                     .generateHolder()
                     .computePosition()
             } else {
-                var config      = this.config
-                config.position = stickyStyleName
+                var config             = this.config
+                config.position        = stickyStyleName
+                this.state.isQualified = false
                 this.$el.css( config )
             }
         },
@@ -153,10 +155,22 @@
             return this
         },
 
+        prepareCompute: function() {
+            var $el = this.$el,
+                $parent
+
+            this.$parent = $parent = $el.parent()
+            this.elBox = this.computeBoxModel( $el )
+            this.pBox  = this.computeBoxModel( $parent )
+
+            return this
+        },
+
         generateHolder: function() {
             var config = this.config,
                 state  = this.state,
                 $el    = this.$el,
+                pBox   = this.pBox,
                 $placeholder, elStyle
 
             if ( !state.hasHolder ) {
@@ -166,7 +180,7 @@
                 $el.css( {
                     position: 'relative',
                     top:      0,
-                    left:     config.left + 'px'
+                    left:     ( config.left - pBox.padding.left ) + 'px'
                 } )
 
                 elStyle = getComputedStyle( $el[ 0 ] )
@@ -202,18 +216,17 @@
             var config    = this.config,
                 rect      = this.rect,
                 $el       = this.$el,
-                $parent   = $el.parent(),
-                elPos     = $el.position(),
+                $parent   = this.$parent,
                 elOffset  = $el.offset(),
-                elBox     = this.computeBoxModel( $el ),
-                pBox      = this.computeBoxModel( $parent ),
-                parentPos = $parent.position(),
+                elBox     = this.elBox,
+                pBox      = this.pBox,
+                parentPos = $parent.offset(),
                 pTop      = parentPos.top,
                 pLeft     = parentPos.left,
                 bottom    = parseCSSVal( $el.css( 'bottom' ) ),
                 right     = parseCSSVal( $el.css( 'right' ) ),
-                top       = elPos.top,
-                left      = elPos.left
+                top       = elOffset.top,
+                left      = elOffset.left
 
             this.elBox = elBox
             this.pBox  = pBox
