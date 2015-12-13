@@ -39,7 +39,8 @@
     function parseMarginOrPadding( val ) {
         var arr = val.split( ' ' ),
             len = 4,
-            tmp = []
+            tmp = [],
+            v
 
         if ( !val ) {
             arr = tmp = [ 0, 0, 0, 0 ]
@@ -180,7 +181,7 @@
                 $el.css( {
                     position: 'relative',
                     top:      0,
-                    left:     ( config.left - pBox.padding.left ) + 'px'
+                    left:     ( config.left ? ( config.left - pBox.padding.left ) : 0 ) + 'px'
                 } )
 
                 elStyle = getComputedStyle( $el[ 0 ] )
@@ -239,25 +240,41 @@
 
             pTop  = pTop - pBox.padding.top - pBox.margin.top
             pLeft = pLeft - pBox.padding.left - pBox.margin.left
-            top   = ( pTop > top ? pTop : top ) + elBox.margin.top
-            left  = ( pLeft > left ? pLeft : left ) + elBox.margin.left
+            top   = pTop > top ? pTop : top
+            left  = pLeft > left ? pLeft : left
+
+            bottom = top + pBox.height - bottom - pBox.padding.top - pBox.padding.bottom - elBox.margin.top - elBox.margin.bottom - elBox.height - config.top
+            right  = left + pBox.width - right - pBox.padding.left - pBox.padding.right - elBox.margin.left - elBox.margin.right - elBox.width - config.left
+
+            if ( right < 0 ) {
+                left += right
+                config.left += right
+                right = 0
+            }
+
+            if ( bottom < 0 ) {
+                top += bottom
+                config.top += bottom
+                bottom = 0
+            }
 
             rect.offset = {
                 top:    top,
                 left:   left,
-                bottom: top + pBox.height - bottom - pBox.padding.top - pBox.padding.bottom - elBox.margin.top - elBox.margin.bottom - elBox.height - config.top,
-                right:  left + pBox.width - right - pBox.padding.left - pBox.padding.right - elBox.margin.left - elBox.margin.right - elBox.width - config.left
+                bottom: bottom,
+                right:  right
             }
 
             //TODO
             config.bottom = rect.offset.bottom - top
             config.right  = rect.offset.right - left
 
-            rect.old = {
-                left:   elOffset.left,
-                top:    0,
-                bottom: bottom,
-                right:  right
+            if ( config.bottom < 0 ) {
+                config.bottom = 0
+            }
+
+            if ( config.right < 0 ) {
+                config.right = 0
             }
 
             return this
@@ -302,7 +319,6 @@
                 rect           = this.rect,
                 constraintRect = rect.constraint,
                 offsetRect     = rect.offset,
-                old            = rect.old,
                 difference
 
             //TODO
@@ -314,7 +330,7 @@
                     margin:   0,
                     top:      constraintRect.top,
                     width:    elBox.width - elPadding.left - elPadding.right,
-                    height:   elBox.height - elPadding.top - elPadding.bottom,
+                    height:   elBox.height - elPadding.top - elPadding.bottom
                 } )
             }
 
@@ -348,7 +364,6 @@
                 rect           = this.rect,
                 offsetRect     = rect.offset,
                 constraintRect = rect.constraint,
-                oldRect        = rect.old,
                 val, difference
 
             if ( state.isFixed ) {
@@ -359,18 +374,26 @@
                     if ( scrollVal >= val ) {
                         $el.css( 'top', constraintRect.top - scrollVal + val )
                         state.isVerticalFixed = true
-                    } else if ( state.isFixed && ( offsetRect.top - scrollVal ) > constraintRect.top ) {
-                        $el.css( 'top', constraintRect.top - scrollVal + offsetRect.top )
-                        state.isVerticalFixed = false
+                    } else if ( state.isFixed ) {
+                        difference = offsetRect.top - scrollVal
+
+                        if ( difference > constraintRect.top ) {
+                            $el.css( 'top', difference )
+                            state.isVerticalFixed = false
+                        }
                     }
                 } else {
                     val = offsetRect.right
                     if ( scrollVal >= val ) {
                         $el.css( 'left', constraintRect.left - scrollVal + val )
                         state.isHorizontalFixed = true
-                    } else if ( state.isFixed && ( offsetRect.left - scrollVal ) > constraintRect.left ) {
-                        $el.css( 'left', constraintRect.left - scrollVal + offsetRect.left )
-                        state.isHorizontalFixed = false
+                    } else if ( state.isFixed ) {
+                        difference = offsetRect.left - scrollVal
+
+                        if ( difference > constraintRect.left ) {
+                            $el.css( 'left', difference )
+                            state.isHorizontalFixed = false
+                        }
                     }
                 }
             }
