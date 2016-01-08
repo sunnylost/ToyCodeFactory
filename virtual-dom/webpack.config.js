@@ -1,11 +1,10 @@
 var webpack    = require( 'webpack' ),
     Path       = require( 'path' ),
     ROOT_PATH  = Path.resolve( __dirname ),
-    APP_PATH   = Path.resolve( ROOT_PATH, 'src' ),
     BUILD_PATH = Path.resolve( ROOT_PATH, 'build' )
 
 module.exports = {
-    entry:   APP_PATH,
+    entry:   ROOT_PATH,
     output:  {
         path:     BUILD_PATH,
         filename: 'bundle.js'
