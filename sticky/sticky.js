@@ -132,9 +132,9 @@
         }
     }
 
-    function Sticky( config ) {
+    function Sticky( el, config ) {
         this.config = config
-        this.$el    = $( config.el )
+        this.$el    = $( el )
         this.rect   = {}
         this.state  = {
             hasHolder            : false,
@@ -210,10 +210,11 @@
         },
 
         generateHolder: function () {
-            var config = this.config,
-                state  = this.state,
-                $el    = this.$el,
-                pBox   = this.pBox,
+            var config    = this.config,
+                state     = this.state,
+                $el       = this.$el,
+                pBox      = this.pBox,
+                holderCSS = '',
                 $placeholder, elStyle
 
             if ( !state.hasHolder ) {
@@ -226,10 +227,15 @@
                 } ) )
 
                 elStyle = getComputedStyle( $el[ 0 ] )
+                for ( var key in config ) {
+                    if ( replicateAttrs.indexOf( key ) == -1 ) {
+                        holderCSS += key + ':' + elStyle[ key ] + ';'
+                    }
+                }
 
-                this.holderCSS = replicateAttrs.map( function ( v ) {
-                    return v + ':' + elStyle[ v ]
-                } ).join( ';' )
+                this.holderCSS = holderCSS + replicateAttrs.map( function ( v ) {
+                        return v + ':' + elStyle[ v ]
+                    } ).join( ';' )
 
                 $el.after( $placeholder )
                 this.$placeholder = $placeholder
@@ -452,14 +458,13 @@
         config = $.extend( {}, defaultConfig, config )
 
         this.each( function () {
-            config.el  = this
-            var sticky = new Sticky( config )
+            var sticky = new Sticky( this, config )
             sticky.state.isQualified && globalSticky.push( sticky )
         } )
 
         $win.triggerHandler( SCROLL_EVENT, { isForced: true } )
 
-        console.log( globalSticky )
+        return this
     }
 
     function handleScroll( e, data ) {
