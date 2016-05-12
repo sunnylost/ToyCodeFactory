@@ -10,11 +10,11 @@
  *      handle negative value
  */
 
-;(function( win, $ ) {
+;(function ( win, $ ) {
     var $win           = $( win ),
         globalSticky   = [],
         defaultConfig  = {
-            top:  0,
+            top : 0,
             left: 0
         },
         replicateAttrs = [ 'margin', 'padding', 'width', 'height', 'float', 'display', 'position', 'left' ],
@@ -26,14 +26,48 @@
         SCROLL_EVENT   = 'scroll.sticky',
         stickyStyleName
 
+    /**
+     * @FIXME: Chrome 目前对 sticky 的实现是错误的
+     * https://www.chromestatus.com/feature/6190250464378880
+     */
+    function isChrome() {
+        return !!win.chrome || navigator.userAgent.indexOf( 'Chrome' ) != -1
+    }
+
     function isSupportSticky() {
+        if ( isChrome() ) {
+            return false
+        }
+
         var doom = document.createElement( 'div' );
 
-        [ '', '-webkit-', '-moz-', '-ms-', '-o-' ].forEach( function( v ) {
+        [ '', '-webkit-', '-moz-', '-ms-', '-o-' ].forEach( function ( v ) {
             doom.style.position = v + 'sticky'
         } )
 
         return ( stickyStyleName = doom.style.position ).indexOf( 'sticky' ) != -1
+    }
+
+    function observeSize( el, callback ) {
+        var observer
+
+        if ( typeof win.MutationObserver == 'undefined' ) {
+            var intervalId = setInterval( callback, 1000 )
+
+            observer = {
+                disconnect: function () {
+                    clearTimeout( intervalId )
+                }
+            }
+        } else {
+            observer = new MutationObserver( callback )
+            observer.observe( el, {
+                childList: true,
+                subtree  : true
+            } )
+        }
+
+        return observer
     }
 
     function parseMarginOrPadding( val ) {
@@ -54,37 +88,37 @@
             case 1:
                 v = tmp[ 0 ]
                 return {
-                    top:    v,
-                    left:   v,
-                    right:  v,
+                    top   : v,
+                    left  : v,
+                    right : v,
                     bottom: v
                 }
                 break
 
             case 2:
                 return {
-                    top:    tmp[ 0 ],
-                    left:   tmp[ 1 ],
-                    right:  tmp[ 1 ],
+                    top   : tmp[ 0 ],
+                    left  : tmp[ 1 ],
+                    right : tmp[ 1 ],
                     bottom: tmp[ 0 ]
                 }
                 break
 
             case 3:
                 return {
-                    top:    tmp[ 0 ],
-                    left:   tmp[ 1 ],
-                    right:  tmp[ 1 ],
+                    top   : tmp[ 0 ],
+                    left  : tmp[ 1 ],
+                    right : tmp[ 1 ],
                     bottom: tmp[ 2 ]
                 }
                 break
 
             case 4:
                 return {
-                    top:    tmp[ 0 ],
-                    right:  tmp[ 1 ],
+                    top   : tmp[ 0 ],
+                    right : tmp[ 1 ],
                     bottom: tmp[ 2 ],
-                    left:   tmp[ 3 ]
+                    left  : tmp[ 3 ]
                 }
         }
     }
@@ -103,12 +137,12 @@
         this.$el    = $( config.el )
         this.rect   = {}
         this.state  = {
-            hasHolder:             false,
-            isFixed:               false,
-            isVerticalFixed:       false,
-            isHorizontalFixed:     false,
-            isQualified:           true,
-            isVerticalQualified:   true,
+            hasHolder            : false,
+            isFixed              : false,
+            isVerticalFixed      : false,
+            isHorizontalFixed    : false,
+            isQualified          : true,
+            isVerticalQualified  : true,
             isHorizontalQualified: true
         }
 
@@ -118,13 +152,21 @@
     Sticky.prototype = {
         constructor: Sticky,
 
-        init: function() {
+        init: function () {
+            var that = this
+
             if ( !isSupportSticky() ) {
                 this
                     .isQualified()
                     .prepareCompute()
                     .generateHolder()
                     .computePosition()
+
+                //@TODO optimise
+                observeSize( this.$parent[ 0 ], function () {
+                    that.prepareCompute()
+                        .computePosition()
+                } )
             } else {
                 var config             = this.config
                 config.position        = stickyStyleName
@@ -133,7 +175,7 @@
             }
         },
 
-        isQualified: function() {
+        isQualified: function () {
             var state  = this.state,
                 el     = this.$el[ 0 ],
                 styles = win.getComputedStyle( el )
@@ -156,7 +198,7 @@
             return this
         },
 
-        prepareCompute: function() {
+        prepareCompute: function () {
             var $el = this.$el,
                 $parent
 
@@ -167,7 +209,7 @@
             return this
         },
 
-        generateHolder: function() {
+        generateHolder: function () {
             var config = this.config,
                 state  = this.state,
                 $el    = this.$el,
@@ -178,15 +220,14 @@
                 $placeholder    = $( '<x-faketag>' )
                 state.hasHolder = true
 
-                $el.css( {
+                $el.css( $.extend( {}, config, {
                     position: 'relative',
-                    top:      0,
-                    left:     ( config.left ? ( config.left - pBox.padding.left ) : 0 ) + 'px'
-                } )
+                    left    : ( config.left ? ( config.left - pBox.padding.left ) : 0 ) + 'px'
+                } ) )
 
                 elStyle = getComputedStyle( $el[ 0 ] )
 
-                this.holderCSS = replicateAttrs.map( function( v ) {
+                this.holderCSS = replicateAttrs.map( function ( v ) {
                     return v + ':' + elStyle[ v ]
                 } ).join( ';' )
 
@@ -201,24 +242,24 @@
             return this
         },
 
-        computeBoxModel: function( el ) {
+        computeBoxModel: function ( el ) {
             var offset = el.offset()
 
             return {
-                margin:  parseMarginOrPadding( el.css( 'margin' ) ),
+                margin : parseMarginOrPadding( el.css( 'margin' ) ),
                 padding: parseMarginOrPadding( el.css( 'padding' ) ),
-                width:   offset.width,
-                height:  offset.height
+                width  : offset.width,
+                height : offset.height
             }
         },
 
         //TODO
-        computePosition: function() {
+        computePosition: function () {
             var config    = this.config,
                 rect      = this.rect,
                 $el       = this.$el,
                 $parent   = this.$parent,
-                elOffset  = $el.offset(),
+                elOffset  = $el[ 0 ].getBoundingClientRect(),
                 elBox     = this.elBox,
                 pBox      = this.pBox,
                 parentPos = $parent.offset(),
@@ -259,10 +300,10 @@
             }
 
             rect.offset = {
-                top:    top,
-                left:   left,
+                top   : top,
+                left  : left,
                 bottom: bottom,
-                right:  right
+                right : right
             }
 
             //TODO
@@ -280,7 +321,7 @@
             return this
         },
 
-        check: function( scrollTop, scrollLeft, isVertical ) {
+        check: function ( scrollTop, scrollLeft, isVertical ) {
             var state          = this.state,
                 rect           = this.rect,
                 offsetRect     = rect.offset,
@@ -310,7 +351,7 @@
             }
         },
 
-        fixed: function( dir, scrollVal ) {
+        fixed: function ( dir, scrollVal ) {
             //console.log( 'fixed', dir, scrollVal, scrollTop )
             var $el            = this.$el,
                 elBox          = this.elBox,
@@ -327,10 +368,10 @@
                 $el.css( {
                     position: 'fixed',
                     //TODO
-                    margin:   0,
-                    top:      constraintRect.top,
-                    width:    elBox.width - elPadding.left - elPadding.right,
-                    height:   elBox.height - elPadding.top - elPadding.bottom
+                    margin  : 0,
+                    top     : constraintRect.top,
+                    width   : elBox.width - elPadding.left - elPadding.right,
+                    height  : elBox.height - elPadding.top - elPadding.bottom
                 } )
             }
 
@@ -354,11 +395,11 @@
 
             this.$placeholder.css( {
                 visibility: 'visible',
-                display:    'block'
+                display   : 'block'
             } )
         },
 
-        restore: function( dir, scrollVal ) {
+        restore: function ( dir, scrollVal ) {
             var $el            = this.$el,
                 state          = this.state,
                 rect           = this.rect,
@@ -407,10 +448,10 @@
         }
     }
 
-    $.fn.sticky = function( config ) {
+    $.fn.sticky = function ( config ) {
         config = $.extend( {}, defaultConfig, config )
 
-        this.each( function() {
+        this.each( function () {
             config.el  = this
             var sticky = new Sticky( config )
             sticky.state.isQualified && globalSticky.push( sticky )
@@ -441,7 +482,7 @@
         prevScrollTop  = scrollTop
         prevScrollLeft = scrollLeft
 
-        globalSticky.forEach( function( v ) {
+        globalSticky.forEach( function ( v ) {
             v.check( scrollTop, scrollLeft, isVertical )
         } )
     }
