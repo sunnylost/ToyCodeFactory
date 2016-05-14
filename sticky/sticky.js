@@ -163,10 +163,7 @@
                     .computePosition()
 
                 //@TODO optimise
-                observeSize( this.$parent[ 0 ], function () {
-                    that.prepareCompute()
-                        .computePosition()
-                } )
+                this.observeHandler = observeSize( this.$parent[ 0 ], this.reCompute.bind( this ) )
             } else {
                 var config             = this.config
                 config.position        = stickyStyleName
@@ -261,20 +258,16 @@
 
         //TODO
         computePosition: function () {
-            var config    = this.config,
-                rect      = this.rect,
-                $el       = this.$el,
-                $parent   = this.$parent,
-                elOffset  = $el[ 0 ].getBoundingClientRect(),
-                elBox     = this.elBox,
-                pBox      = this.pBox,
-                parentPos = $parent.offset(),
-                pTop      = parentPos.top,
-                pLeft     = parentPos.left,
-                bottom    = parseCSSVal( $el.css( 'bottom' ) ),
-                right     = parseCSSVal( $el.css( 'right' ) ),
-                top       = elOffset.top,
-                left      = elOffset.left
+            var config   = this.config,
+                rect     = this.rect,
+                $el      = this.$el,
+                elOffset = $el[ 0 ].getBoundingClientRect(),
+                elBox    = this.elBox,
+                pBox     = this.pBox,
+                bottom   = parseCSSVal( $el.css( 'bottom' ) ),
+                right    = parseCSSVal( $el.css( 'right' ) ),
+                top      = elOffset.top,
+                left     = elOffset.left
 
             this.elBox = elBox
             this.pBox  = pBox
@@ -284,33 +277,7 @@
             config.left = config.left ? config.left : 0
 
             rect.constraint = config
-
-            pTop  = pTop - pBox.padding.top - pBox.margin.top
-            pLeft = pLeft - pBox.padding.left - pBox.margin.left
-            top   = pTop > top ? pTop : top
-            left  = pLeft > left ? pLeft : left
-
-            bottom = top + pBox.height - bottom - pBox.padding.top - pBox.padding.bottom - elBox.margin.top - elBox.margin.bottom - elBox.height - config.top
-            right  = left + pBox.width - right - pBox.padding.left - pBox.padding.right - elBox.margin.left - elBox.margin.right - elBox.width - config.left
-
-            if ( right < 0 ) {
-                left += right
-                config.left += right
-                right = 0
-            }
-
-            if ( bottom < 0 ) {
-                top += bottom
-                config.top += bottom
-                bottom = 0
-            }
-
-            rect.offset = {
-                top   : top,
-                left  : left,
-                bottom: bottom,
-                right : right
-            }
+            this.reCompute()
 
             //TODO
             config.bottom = rect.offset.bottom - top
@@ -325,6 +292,39 @@
             }
 
             return this
+        },
+
+        //only care about $parent's height change
+        reCompute: function () {
+            var rect   = this.$parent[ 0 ].getBoundingClientRect(),
+                pBox   = this.pBox,
+                elBox  = this.elBox,
+                pTop   = rect.top - pBox.padding.top - pBox.margin.top,
+                pLeft  = rect.left - pBox.padding.left - pBox.margin.left,
+                top    = pTop > top ? pTop : top,
+                left   = pLeft > left ? pLeft : left,
+                bottom = top + pBox.height - bottom - pBox.padding.top - pBox.padding.bottom - elBox.margin.top - elBox.margin.bottom - elBox.height - config.top,
+                right  = left + pBox.width - right - pBox.padding.left - pBox.padding.right - elBox.margin.left - elBox.margin.right - elBox.width - config.left
+
+
+            if ( right < 0 ) {
+                left += right
+                config.left += right
+                right = 0
+            }
+
+            if ( bottom < 0 ) {
+                top += bottom
+                config.top += bottom
+                bottom = 0
+            }
+
+            this.rect.offset = {
+                top   : top,
+                left  : left,
+                bottom: bottom,
+                right : right
+            }
         },
 
         check: function ( scrollTop, scrollLeft, isVertical ) {
@@ -451,6 +451,11 @@
                 $el[ 0 ].style.cssText = this.holderCSS
                 this.$placeholder.hide()
             }
+        },
+
+        destroy: function () {
+            globalSticky.splice( globalSticky.indexOf( this ), 1 )
+            this.observeHandler && this.observeHandler.disconnect()
         }
     }
 
