@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        table {
+            border-collapse : collapse;
+        }
+
+        table, th, td {
+            border : 1px solid #000;
+        }
+
+        .flexible-table, table {
+            position : relative;
+            width    : 1000px;
+        }
+
+        .mover {
+            position         : absolute;
+            top              : 0;
+            height           : 100%;
+            width            : 2px;
+            background-color : #000;
+            z-index          : 10;
+            cursor           : col-resize;
+        }
+    </style>
+</head>
+<body>
+<div class="flexible-table">
+    <table>
+        <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+        </colgroup>
+        <thead>
+        <tr>
+            <th>First</th>
+            <th>Second</th>
+            <th>Third</th>
+            <th>Fourth</th>
+            <th>Fifth</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>1</td>
+            <td>2</td>
+            <td>3</td>
+            <td>4</td>
+            <td>5</td>
+        </tr>
+        <tr>
+            <td>2-1</td>
+            <td>2-2</td>
+            <td>2-3</td>
+            <td>2-4</td>
+            <td>2-5</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script>
+    var doc = document,
+            $table = document.querySelector( '.flexible-table' ),
+            tLeft = $table.offsetLeft,
+            isDown = false,
+            colEls = $table.querySelectorAll( 'col' ),
+            trEls = $table.querySelectorAll( 'tr' )[ 1 ].querySelectorAll( 'td' ),
+            moverEls = [],
+            currentCol,
+            currentMover
+
+    doc.addEventListener( 'mousemove', move )
+    doc.addEventListener( 'touchmove', move )
+
+    doc.addEventListener( 'touchend', end )
+    doc.addEventListener( 'mouseup', end )
+
+    function move( e ) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ( isDown && currentMover ) {
+            clearSelection()
+            calculate( e )
+        }
+    }
+
+    function end() {
+        isDown       = false
+        currentMover = null
+    }
+
+    function createHandler() {
+        trEls.forEach( function ( el, i ) {
+            if ( i == 0 || i == trEls.length - 1 ) {
+                return
+            }
+
+            var mover           = doc.createElement( 'div' )
+            mover.className     = 'mover'
+            mover.style.cssText = `left:${ el.offsetLeft }px`
+            $table.append( mover )
+            bindEvent( mover, colEls[ i ] )
+            moverEls.push( mover )
+        } )
+    }
+
+    function bindEvent( el, col ) {
+        function start() {
+            isDown       = true
+            currentMover = el
+            currentCol   = col
+        }
+
+        el.addEventListener( 'mousedown', start )
+        el.addEventListener( 'touchstart', start )
+    }
+
+    function calculate( e ) {
+        var relOffset = e.clientX - tLeft,
+            index     = moverEls.indexOf( currentMover ),
+            col       = colEls[ index ],
+            trEl      = trEls[ index ],
+            trElLeft  = trEl.offsetLeft,
+            len       = colEls.length
+
+        col.style.width = ( relOffset - trElLeft ) + 'px'
+
+        trEls.forEach( function ( tr, i ) {
+            if ( i !== 0 && i !== len - 1 ) {
+                moverEls[ i - 1 ].style.left = tr.offsetLeft + 'px'
+            }
+        } )
+    }
+
+    var clearSelection = window.getSelection ? function () {
+        window.getSelection().removeAllRanges()
+    } : function () {
+        document.selection.empty()
+    }
+
+    createHandler()
+</script>
+</body>
+</html>
