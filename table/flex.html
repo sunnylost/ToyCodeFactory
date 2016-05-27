@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            margin  : 0;
+            padding : 0;
+        }
+
+        .wrap {
+            display  : flex;
+            position : relative;
+        }
+
+        .col {
+            box-sizing   : border-box;
+            width        : 20%;
+            padding-left : 10px;
+        }
+
+        .bar {
+            position         : absolute;
+            top              : 0;
+            width            : 5px;
+            height           : 100%;
+            background-color : green;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="col">
+        <div>1-1</div>
+        <div>1-2</div>
+        <div>1-3</div>
+        <div>1-4</div>
+    </div>
+    <div class="col">
+        <div>2-1</div>
+        <div>2-2</div>
+        <div>2-3</div>
+        <div>2-4</div>
+    </div>
+    <div class="col">
+        <div>3-1</div>
+        <div>3-2</div>
+        <div>3-3</div>
+        <div>3-4</div>
+    </div>
+    <div class="col">
+        <div>4-1</div>
+        <div>4-2</div>
+        <div>4-3</div>
+        <div>4-4</div>
+    </div>
+    <div class="col">
+        <div>5-1</div>
+        <div>5-2</div>
+        <div>5-3</div>
+        <div>5-4</div>
+    </div>
+</div>
+<script>
+    function flexiable( el ) {
+        var win    = window,
+            doc    = document,
+            cols   = el.querySelectorAll( '.col' ),
+            bars   = [],
+            isDown = false,
+            currentMover, currentCol
+
+        var clearSelection = win.getSelection ? function () {
+            win.getSelection().removeAllRanges()
+        } : function () {
+            doc.selection.empty()
+        }
+
+        doc.addEventListener( 'mousemove', move )
+        doc.addEventListener( 'touchmove', move )
+
+        doc.addEventListener( 'touchend', end )
+        doc.addEventListener( 'mouseup', end )
+
+        function bindEvent( el, col ) {
+            function start() {
+                isDown       = true
+                currentMover = el
+                currentCol   = col
+            }
+
+            el.addEventListener( 'mousedown', start )
+            el.addEventListener( 'touchstart', start )
+        }
+
+        function move( e ) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            if ( isDown && currentMover ) {
+                clearSelection()
+                calculate( e )
+            }
+        }
+
+        function end() {
+            isDown       = false
+            currentMover = null
+        }
+
+        function calculate( e ) {
+            var relOffset = e.clientX,
+                index     = bars.indexOf( currentMover ),
+                col       = cols[ index ],
+                preOffset = cols[ index ].offsetLeft
+
+            col.style.width = ( relOffset - preOffset ) + 'px'
+
+            cols.forEach( function ( col, i ) {
+                if ( i !== 0 ) {
+                    bars[ i - 1 ].style.left = col.offsetLeft + 'px'
+                }
+            } )
+        }
+
+        cols.forEach( function ( col, i ) {
+            if ( i == 0 ) {
+                return
+            }
+
+            var bar           = doc.createElement( 'x-bar' )
+            bar.className     = 'bar'
+            bar.style.cssText = `left:${ col.offsetLeft }px`
+            el.appendChild( bar )
+            bars.push( bar )
+            bindEvent( bar, col )
+        } )
+    }
+
+    flexiable( document.querySelector( '.wrap' ) )
+</script>
+</body>
+</html>
