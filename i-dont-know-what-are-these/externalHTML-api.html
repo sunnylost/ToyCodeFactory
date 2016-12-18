@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<p id="test" style="background-color: #abc7ec;">
+    <span>Test1</span>
+    <span>Test2</span>
+    <span>Test3</span>
+    <span>Test4</span>
+</p>
+<script>
+    function replace( el, tag ) {
+        var html = el.outerHTML,
+            name = el.tagName.toLowerCase()
+
+        el.outerHTML = html
+                .replace( RegExp( '^<' + name ), '<' + tag )
+                .replace( RegExp( name + '>$' ), tag + '>' )
+    }
+
+    replace( test, 'div' )
+
+    Object.defineProperty( Element.prototype, 'externalHTML', {
+        get: function() {
+            var pn    = this.parentNode
+            var tHTML = this.innerHTML
+            var re    = new RegExp( '<\\w+[^<>]*>' + tHTML + '<\/[^<>]*>', 'gi' )
+            return pn.innerHTML.match( re )[ 0 ]
+        },
+
+        set: function( val ) {
+            var pn       = this.parentNode
+            var tHTML    = this.innerHTML
+            var re       = new RegExp( '<\\w+[^<>]*>' + tHTML + '<\/[^<>]*>', 'gi' )
+            pn.innerHTML = pn.innerHTML.replace( re, val )
+        }
+
+    } )
+</script>
+</body>
+</html>

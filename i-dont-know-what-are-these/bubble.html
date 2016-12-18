@@ -1,0 +1,124 @@
+<html>
+<head>
+    <style>
+        .wrap {
+            position : relative;
+            width    : 50%;
+            height   : 400px;
+            margin   : auto;
+            overflow : hidden;
+        }
+
+        .item {
+            position         : absolute;
+            left             : 0;
+            top              : 0;
+            width            : 100px;
+            height           : 100px;
+            line-height      : 100px;
+            border-radius    : 10px;
+            font-size        : 60px;
+            color            : #fff;
+            text-align       : center;
+            transform-origin : top left;
+        }
+
+        .inner .item:nth-child(1) {
+            background-color : #3a7b2f;
+        }
+
+        .inner .item:nth-child(2) {
+            background-color : #ceb9cc;
+        }
+
+        .inner .item:nth-child(3) {
+            background-color : #db854d;
+        }
+
+        .inner .item:nth-child(4) {
+            background-color : #86dd31;
+        }
+
+        .inner .item:nth-child(5) {
+            background-color : #43b6fb;
+        }
+
+        .inner .item:nth-child(6) {
+            background-color : #fbb0df;
+        }
+
+        .inner .item:nth-child(7) {
+            background-color : #42fb9c;
+        }
+
+        .inner .item:nth-child(8) {
+            background-color : #fbf47c;
+        }
+
+        .inner .item:nth-child(9) {
+            background-color : #fb219f;
+        }
+
+        .inner .item:nth-child(10) {
+            background-color : #c6fbce;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap"></div>
+<script>
+    var data     = [ 1, 2, 3, 4, 5, 6, 7, 8 ],
+        $wrap    = document.querySelector( '.wrap' ),
+        elHeight = 100,
+        $els     = [],
+        html     = '',
+        restoreY
+
+    data.forEach( function ( val ) {
+        html += `<div class="item">${ val }</div>`
+    } )
+
+    $wrap.innerHTML = '<div class="inner">' + html + '</div>'
+
+    var tmp = $wrap.querySelectorAll( '.item' )
+    for ( var i = 0, len = tmp.length; i < len; i++ ) {
+        var el = tmp[ i ],
+            y  = i * elHeight
+
+        el.style.cssText = 'transform: translateY(' + y + 'px)'
+
+        $els.push( {
+            el: el,
+            y : y
+        } )
+    }
+
+    restoreY = ( len - 2 ) * elHeight
+
+    function animate() {
+        $els.forEach( function ( obj, i ) {
+            var style = '',
+                y     = obj.y
+
+            if ( y < 0 ) {
+                y     = restoreY
+                obj.y = y
+                style = 'opacity: 0; transform:translateY(' + y + 'px);'
+            } else if ( y == 0 ) {
+                y -= elHeight
+                obj.y = y
+                style = 'opacity: 0; transition: all 1s ease-out; transform:translateY(' + y + 'px);'
+            } else {
+                y -= elHeight
+                obj.y = y
+                style = 'opacity: 1; transition: all 1s ease-in; transform:translateY(' + y + 'px);'
+            }
+
+            obj.el.style.cssText = style
+        } )
+    }
+
+    setInterval( animate, 2000 )
+</script>
+</body>
+</html>

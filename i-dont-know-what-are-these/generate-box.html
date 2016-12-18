@@ -1,0 +1,86 @@
+<html style="font-size: 103.867px;">
+<head>
+    <style>
+        #container {
+            margin           : auto;
+            width            : 900px;
+            height           : 900px;
+            position         : relative;
+            background-color : #000;
+        }
+
+        .box {
+            position : absolute;
+            z-index  : 10;
+        }
+    </style>
+    <script src="circle.js"></script>
+</head>
+<body>
+<div id="container"></div>
+<script>
+    var COLUMN                = 3,
+        BOX_SIZE              = 3,
+        GAP                   = 10,
+        generateBoxCoordinate = function ( size ) {
+            var row        = 0,
+                column     = 0,
+                coordinate = []
+
+            for ( ; row < size; row++ ) {
+                for ( column = 0; column < size; column++ ) {
+                    coordinate.push( {
+                        lx: column,
+                        ly: row,
+                        rx: column + 1,
+                        ry: row + 1
+                    } )
+                }
+            }
+            return coordinate
+        },
+        generatePosition      = function ( start, end, box ) {
+            var difference = end / COLUMN,  //商
+                remainder  = end % COLUMN, //余数
+                startPoint = box[ start - 1 ],
+                endPoint   = box[ end - 1 ]
+
+            return {
+                left  : startPoint.lx,
+                top   : startPoint.ly,
+                width : endPoint.rx - startPoint.lx,
+                height: endPoint.ry - startPoint.ly
+            }
+        },
+
+        wrapGeneratePosition  = function ( size ) {
+            var coordinate = generateBoxCoordinate( size )
+            return function ( start, end ) {
+                return generatePosition( start, end, coordinate )
+            }
+        },
+
+        generateBox           = function ( coordinate ) {
+            var div           = document.createElement( 'div' )
+            div.className     = 'box'
+            div.style.cssText = `
+                width: ${ coordinate.width * BOX_SIZE }rem;
+                height: ${ coordinate.height * BOX_SIZE}rem;
+                left: ${ coordinate.left * BOX_SIZE }rem;
+                top: ${ coordinate.top * BOX_SIZE }rem;
+                background-color:#${ (Math.random().toString( 16 ) + '000000').slice( 2, 8 ) };`
+            return div
+        },
+        container             = document.getElementById( 'container' ),
+
+        testData              = [ [ 1, 3 ], [ 4, 8 ], [ 6, 6 ], [ 9, 9 ] ]
+
+    var coordinates = wrapGeneratePosition( COLUMN )
+
+    testData.forEach( function ( data ) {
+        container.appendChild( generateBox( coordinates( data[ 0 ], data[ 1 ] ) ) )
+    } )
+
+</script>
+</body>
+</html>

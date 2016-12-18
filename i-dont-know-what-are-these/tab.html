@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css" media="screen">
+        .tab-title {
+            text-align: center;
+        }
+        
+        .tab-title-item {
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .tab-title-item img {
+            height: 32px;
+        }
+
+        .active img {
+            height: 64px;
+        }
+
+        .tab-content {
+            position: relative;
+            border: 1px solid #000;
+            height: 200px;
+        }
+
+        .tab-content-item {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+        }
+
+        #tab-content-0 {
+            display: block;
+        }
+    </style>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+</head>
+<body>
+    <div class="tab">
+        <ul class="tab-content">
+            <li class="tab-content-item" id="tab-content-0">
+                Wangwang~0
+            </li>
+            <li class="tab-content-item" id="tab-content-1">
+                Wangwang~1
+            </li>
+            <li class="tab-content-item" id="tab-content-2">
+                Wangwang~2
+            </li>
+        </ul>
+        <ul class="tab-title">
+            <li class="tab-title-item active"><img src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRc1emAEHOPJ7JBt-T6nBmJbk7PvndkhXaF3zrUBbW1QpS53aaMTA" alt=""></li>
+            <li class="tab-title-item"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTE9u54EcGOPxpwCjkx9z52av74mheWNzhVvbctw9S6QhGbaXszIEiqIA" alt=""></li>
+            <li class="tab-title-item"><img src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQctMTyaJhwXbTc1Q9l0H8V7eDeRHBTPIzHKgEwh9FCy3vPjdf5XEvXkg" alt=""></li>
+        </ul>
+    </div>
+<script>
+    $(function() {
+        var $tab          = $( '.tab' ),
+            $titles       = $tab.find( '.tab-title-item' ),
+            prefix        = '#tab-content-',
+            $prevTitle    = $titles.eq( 0 ),
+            $prevContent  = $( prefix + '0' )
+
+        $titles.each( function( i ) {
+            $( this ).data( 'index', i )
+        })
+
+        $tab.on( 'click', '.tab-title-item', function() {
+            var $title   = $( this ),
+                $content = $( prefix + $title.data( 'index' ) )
+
+            $prevTitle.removeClass( 'active' )
+            $title.addClass( 'active' )
+            $prevTitle = $title
+
+            $prevContent.hide()
+            $content.show()
+            $prevContent = $content
+        })
+    })
+</script>
+</body>
+</html>

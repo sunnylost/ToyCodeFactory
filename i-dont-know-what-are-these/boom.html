@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Boom</title>
+        <style type="text/css">
+            * {
+                margin: 0;
+                padding: 0;
+            }
+ 
+            #field {
+                position: absolute;
+                left: 30%;
+                top: 20%;
+                overflow: hidden;
+                font-size: 12px;
+                text-align: center;
+            }
+ 
+            #field div {
+                background-color: blue;
+                color: blue;
+                width: 15px;
+                height: 15px;
+                border: 1px solid black;
+                float: left;
+            }
+ 
+            #field .bomb {
+                background-color: black;
+            }
+ 
+            #field .safe {
+                background-color: white;
+            }
+
+            #field .flag {
+                background-color: green;
+            }
+
+            #info {
+                position: absolute;
+                top: 16%;
+                left: 45%;
+            }
+        </style>
+        <script type="text/javascript"> 
+            (function() {
+                var field, info;
+
+                var easy = {
+                    num : 10,
+                    width : 9,
+                    height: 9
+                };
+                var middle = {
+                    num : 40,
+                    width : 16,
+                    height: 16
+                };
+                var hard = {
+                    num : 99,
+                    width : 30,
+                    height: 16
+                };
+
+
+                var chooseType = hard;
+                var bombs;
+                var blocks;
+                var flags = 0;
+ 
+                var begin = function() {
+                    bombs = [];
+                    blocks = [];
+                    generateField();
+                    generateBomb();
+                    initBlocks();
+                    field.onmousedown = blockClick;
+                    field.onselectstart = function() {
+                        return false;
+                    };
+                };
+ 
+                var over = function() {
+                    field.onclick = null;
+                    if(confirm('BOOM! Failed!')) {
+                        begin(chooseType);
+                    }
+                };
+ 
+                var generateBomb = function() {
+                    var w = chooseType.width;
+                    var h = chooseType.height;
+                    var n = chooseType.num;
+                    var i = 0;
+                    var j = 0;
+                    var bomb;
+                    while(n--) {
+                        i = (Math.random() * h)>>0;
+                        j = (Math.random() * w)>>0;
+                        bomb = blocks[i][j];
+                        bomb.isBomb ? n++ : (bomb.isBomb = true, bombs.push(bomb));
+                    }
+                };
+ 
+                var generateField = function() {
+                    var w = chooseType.width;
+                    var h = chooseType.height;
+                    var d = document.createElement('div');
+                    var node;
+                    field.style.width = 17 * w + 'px';
+                    field.style.height = 17 * h + 'px';
+                    field.innerHTML = '';
+                    for(var i=0; i<h; i++) {
+                        blocks[i] = [];
+                        for(var j=0; j<w; j++) {
+                            node = field.appendChild(d.cloneNode(true));
+                            node.r = i;
+                            node.c = j;
+                            node.v = 0;
+                            blocks[i][j] = node;
+                        }
+                    }
+                };
+ 
+                var initBlocks = function() {
+                    var len = chooseType.num;
+
+                    var bomb;
+                    while(len--) {
+                        bomb = bombs[len];
+                        checkEightDirections(bomb, initBlocksFn);
+                    }
+                };
+ 
+                var initBlocksFn = function(block) {
+                    var v = +block.v;
+                    return !block.isBomb && (block.v = v + 1);
+                };
+
+                //检查八个方向的方块
+                var checkEightDirections = function(block, fn) {
+                    var tmpR = 0;
+                    var tmpC = 0;
+                    var r = +block.r;
+                    var c = +block.c;
+                    var w = chooseType.width;
+                    var h = chooseType.height;
+
+                    if((tmpR = r - 1) > -1) {
+                        (tmpC = c - 1) > -1 && fn(blocks[tmpR][tmpC]);
+                        fn(blocks[tmpR][c]);
+                        (tmpC = c + 1) < w && fn(blocks[tmpR][tmpC]);
+                    }
+ 
+                    (tmpC = c - 1) > -1 && fn(blocks[r][tmpC]);
+                    (tmpC = c + 1) < w && fn(blocks[r][tmpC]);
+ 
+ 
+                    if((tmpR = r + 1) < h) {
+                        (tmpC = c - 1) > -1 && fn(blocks[tmpR][tmpC]);
+                        fn(blocks[tmpR][c]);
+                        (tmpC = c + 1) < w && fn(blocks[tmpR][tmpC]);
+                    }
+                };
+ 
+                //将所有方块翻起
+                var showAll = function() {
+                    var outterLength = blocks.length;
+                    var innerLength = 0;
+                    while(outterLength--) {
+                        innerLength = blocks[outterLength].length;
+                        while(innerLength--) {
+                            var bomb = blocks[outterLength][innerLength];
+                            bomb.isBomb ? (bomb.className = 'bomb') : ((bomb.className = 'safe') && (bomb.innerHTML = bomb.v > 0 ? bomb.v : ''));
+                        }
+                    }
+                };
+ 
+                var blockClick = function(e) {
+                    e = e || window.event;
+                    var isRightClick = e.which == 3 || e.button == 2;
+                    var target = e.target || e.srcElement;
+                    var isBomb = target.isBomb;
+                    var isFlag = target.isFlag;  //是否标记
+                    var v = target.v; //-1表示检查过
+
+                    if(isRightClick) {
+                        setFlag(target);
+                    } else {
+                        if(isFlag) {
+                            target.className = '';
+                            flags--;
+                        } else if(isBomb) {
+                            showAll();
+                            over();
+                            return;
+                        } else if(v == -1) {
+                            return;
+                        } else {
+                            checkClick(target); 
+                        }
+                    }
+                };
+ 
+                var checkClick = function(t) {
+                    var v = +t.v;
+
+                    if(v == -1) {
+                        return;
+                    } else if(v != 0) {
+                        t.innerHTML = v;
+                        t.className = 'safe';
+                        t.v = -1;
+                    } else {
+                        t.innerHTML = '';
+                        t.className = 'safe';
+                        t.v = -1;
+ 
+                        checkEightDirections(t, checkClick);
+                    }
+                };
+
+                var setFlag = function(t) {
+                    if(flags == chooseType.num) {
+                        info.innerHTML = '不能添加更多的旗子！';
+                    } else {
+                        t.className == 'flag' || (t.className = 'flag', t.isFlag = true, flags++);
+                    }
+                };
+ 
+                window.onload = function() {
+                    field = document.getElementById('field');
+                    info = document.getElementById('info');
+                    document.oncontextmenu = function() {
+                        return false;
+                    };
+                    begin(chooseType);
+                };
+            })()
+        </script>
+    </head>
+    <body>
+        <div id="info">帮助信息</div>
+        <div id="field" style="-moz-user-select:none;"></div>
+    </body>
+</html>
+

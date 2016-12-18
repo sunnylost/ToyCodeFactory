@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css" media="screen">
+        .spin {
+            position: relative;
+            width: 20rem;
+            height: 20rem;
+            border: 5px solid;
+            border-color:  #e74c3c transparent #e74c3c transparent;
+            border-radius: 50%;
+            animation: spin 1.2s 0s linear infinite alternate;
+        }
+
+        .spin::before, .spin::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            border: 5px solid;
+            
+        }
+
+        .spin::before {
+            width: 16rem;
+            height: 16rem;
+            left: 2rem;
+            top: 2rem;
+            border-color: transparent #f9c922 transparent #f9c922;
+            animation: spin 1.1s 0s linear infinite; 
+        }
+
+        .spin::after {
+            width: 12rem;
+            height: 12rem;
+            left: 4rem;
+            top: 4rem;
+            border-color: #3498db transparent #3498db transparent;
+            animation: spin 1s 0s linear infinite;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="spin">
+    </div>
+</body>
+</html>

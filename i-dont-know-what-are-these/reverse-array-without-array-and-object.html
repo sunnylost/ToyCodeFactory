@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test</title>
+  </head>
+  <body>
+    <script type="text/javascript">
+    function* range( from, to ) {
+      while ( from <= to ) {
+          yield from++
+      }
+    }
+
+    function* map( nums, fn ) {
+      for( var i of nums ) {
+        yield fn( i )
+      }
+    }
+
+    function* reverse( nums ) {
+      var fn = () => {}
+
+      for ( let i of nums ) {
+        let oldFn = fn
+
+        fn = function* () {
+          yield i
+          return oldFn
+        }
+      }
+
+      let ret
+
+      while( ret = fn() ) {
+        yield ret.next().value
+        fn = ret.next().value
+      }
+    }
+
+    function foreach( nums, fn ) {
+        for( var i of nums ) {
+          console.log( i )
+        }
+    }
+
+    foreach( reverse( map( range( 1, 4 ), ( n ) => n * n ) ), console.log )
+    </script>
+  </body>
+</html>
