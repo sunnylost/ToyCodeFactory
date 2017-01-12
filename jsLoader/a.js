@@ -1,5 +1,6 @@
 define([], function() {
 	return {
-		name : 'A'
+		name : 'A',
+		value : 'B'
 	};
 });
